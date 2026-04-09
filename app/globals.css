@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+@keyframes softBob {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.soft-bob {
+  display: inline-block;
+  animation: softBob 2s ease-in-out infinite;
+}
+
+.soft-bob-delay {
+  display: inline-block;
+  animation: softBob 2s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+@keyframes bounce-soft {
+  0%, 90%, 100% {
+    transform: translateY(0);
+  }
+  95% {
+    transform: translateY(-3px);
+  }
+}
+
+.bounce-soft {
+  display: inline-block;
+  animation: bounce-soft 2.5s ease-in-out infinite;
+}
