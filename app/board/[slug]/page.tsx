@@ -28,8 +28,10 @@ async function getPost(prettySlug?: string): Promise<BoardDetail | null> {
   }
 
   try {
-    const { data, error } = await supabaseServer
-      .from("board_posts")
+    const supabase = await supabaseServer();
+
+const { data, error } = await supabase
+  .from("board_posts")
       .select(`
         id,
         author_id,
