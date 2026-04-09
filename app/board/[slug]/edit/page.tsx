@@ -2,31 +2,61 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { API_BASE } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
+
+type BoardPost = {
+  id: number;
+  title: string;
+  body: string;
+  category: string;
+  author_id: string;
+};
 
 export default function EditPage() {
   const params = useParams();
   const router = useRouter();
 
   const slug = params.slug as string;
-  const postId = slug.split("-")[0];
+  const postId = Number(slug.split("-")[0]);
 
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [category, setCategory] = useState("");
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     async function fetchPost() {
       try {
-        const res = await fetch(
-          `${API_BASE}/api/board/${slug}/`,
-          { cache: "no-store" }
-        );
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
 
-        if (!res.ok) return;
+        if (userError || !user) {
+          alert("login required");
+          router.push("/login");
+          return;
+        }
 
-        const data = await res.json();
+        const { data, error } = await supabase
+          .from("board_posts")
+          .select("id, title, body, category, author_id")
+          .eq("id", postId)
+          .single<BoardPost>();
+
+        if (error || !data) {
+          console.error(error);
+          alert("post not found");
+          router.push("/board");
+          return;
+        }
+
+        if (data.author_id !== user.id) {
+          alert("not allowed");
+          router.push(`/board/${slug}`);
+          return;
+        }
 
         setTitle(data.title);
         setBody(data.body);
@@ -38,40 +68,53 @@ export default function EditPage() {
       }
     }
 
-    fetchPost();
-  }, [slug]);
+    if (!Number.isNaN(postId)) {
+      fetchPost();
+    } else {
+      setLoading(false);
+      alert("invalid post");
+      router.push("/board");
+    }
+  }, [postId, router, slug]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setSubmitting(true);
 
     try {
-      const token = localStorage.getItem("token");
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
 
-      const res = await fetch(
-        `${API_BASE}/api/board/${postId}/edit/`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Token ${token}` } : {}),
-          },
-          body: JSON.stringify({
-            title,
-            body,
-            category,
-          }),
-        }
-      );
+      if (userError || !user) {
+        alert("login required");
+        router.push("/login");
+        return;
+      }
 
-      if (!res.ok) {
+      const { error } = await supabase
+        .from("board_posts")
+        .update({
+          title,
+          body,
+          category,
+        })
+        .eq("id", postId)
+        .eq("author_id", user.id);
+
+      if (error) {
+        console.error(error);
         alert("failed to update");
         return;
       }
 
-      // 수정 후 detail 페이지로 이동
       router.push(`/board/${slug}`);
     } catch (err) {
       console.error(err);
+      alert("something went wrong");
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -82,13 +125,11 @@ export default function EditPage() {
   return (
     <main className="min-h-screen bg-[#f7f4ee] text-[#5f5a54]">
       <div className="mx-auto w-[92%] max-w-3xl py-8">
-
         <div className="mb-6 text-[12px] text-[#8e8a84]">
           Editing post
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -115,11 +156,11 @@ export default function EditPage() {
 
           <button
             type="submit"
+            disabled={submitting}
             className="text-sm text-[#5f5a54]"
           >
-            Save
+            {submitting ? "Saving..." : "Save"}
           </button>
-
         </form>
       </div>
     </main>

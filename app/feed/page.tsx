@@ -2,18 +2,18 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { API_BASE } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 
 type FeedPost = {
   id: number;
-  image: string;
-  caption: string;
+  image_url: string;
+  caption: string | null;
   created_at: string;
 };
 
 type Me = {
-  id: number;
-  username: string;
+  id: string;
+  username: string | null;
   role: string | null;
 };
 
@@ -37,44 +37,39 @@ export default function FeedPage() {
   const [isMemberOnly, setIsMemberOnly] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-
     async function load() {
       try {
-        const feedRes = await fetch(`${API_BASE}/api/feed/`, {
-          headers: token
-            ? {
-                Authorization: `Token ${token}`,
-              }
-            : {},
-        });
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
 
-        if (feedRes.status === 401) {
+        if (userError || !user) {
           setIsMemberOnly(true);
-          setLoading(false);
           return;
         }
 
-        if (!feedRes.ok) {
-          setLoading(false);
+        const { data: meData, error: meError } = await supabase
+          .from("profiles")
+          .select("id, username, role")
+          .eq("id", user.id)
+          .single();
+
+        if (!meError && meData) {
+          setMe(meData);
+        }
+
+        const { data: feedData, error: feedError } = await supabase
+          .from("feed_posts")
+          .select("id, image_url, caption, created_at")
+          .order("created_at", { ascending: false });
+
+        if (feedError) {
+          console.error("Failed to load feed:", feedError);
           return;
         }
 
-        const feedData = await feedRes.json();
-        setPosts(feedData);
-
-        if (token) {
-          const meRes = await fetch(`${API_BASE}/api/me/`, {
-            headers: {
-              Authorization: `Token ${token}`,
-            },
-          });
-
-          if (meRes.ok) {
-            const meData = await meRes.json();
-            setMe(meData);
-          }
-        }
+        setPosts(feedData ?? []);
       } catch (error) {
         console.error("Failed to load feed:", error);
       } finally {
@@ -133,8 +128,8 @@ export default function FeedPage() {
               <div key={post.id} className="space-y-2">
                 <div className="aspect-square overflow-hidden bg-[#eee]">
                   <img
-                    src={post.image}
-                    alt=""
+                    src={post.image_url}
+                    alt={post.caption || "feed image"}
                     className="h-full w-full object-cover"
                   />
                 </div>

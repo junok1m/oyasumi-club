@@ -31,7 +31,9 @@ type FeedPost = {
 };
 
 async function getFeaturedPosts(): Promise<FeaturedPost[]> {
-  const { data, error } = await supabaseServer
+  const supabase = await supabaseServer();
+
+  const { data, error } = await supabase
     .from("board_posts")
     .select("id, title, category, views, created_at, slug, thumbnail_url")
     .eq("is_featured", true)
@@ -57,7 +59,9 @@ async function getFeaturedPosts(): Promise<FeaturedPost[]> {
 }
 
 async function getPopularPosts(): Promise<BoardPost[]> {
-  const { data, error } = await supabaseServer
+  const supabase = await supabaseServer();
+
+  const { data, error } = await supabase
     .from("board_posts")
     .select("id, title, category, views, created_at, slug")
     .order("views", { ascending: false })
@@ -80,7 +84,9 @@ async function getPopularPosts(): Promise<BoardPost[]> {
 }
 
 async function getLatestFeed(): Promise<FeedPost[]> {
-  const { data, error } = await supabaseServer
+  const supabase = await supabaseServer();
+
+  const { data, error } = await supabase
     .from("feed_posts")
     .select("id, image_url, caption, created_at")
     .order("created_at", { ascending: false })
