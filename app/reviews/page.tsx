@@ -245,7 +245,6 @@ export default async function ReviewsPage({
   return (
     <main className="-mb-24 min-h-dvh bg-[#fff3f8] pb-32 text-[#5f4d5c]">
       <div className="mx-auto w-[92%] max-w-5xl py-8">
-        <div className="mb-3 text-[12px] font-medium text-pink-400">💜 Oyasumi Girls</div>
         <h1 className="mb-4 text-[24px] font-semibold text-[#4f3a4f]">女の子向け口コミ</h1>
         <p className="mb-6 text-[12px] leading-6 text-[#9b7892]">
           働きやすさ・雰囲気・客層など、女の子たちが投稿したお店の口コミをチェックできます。
