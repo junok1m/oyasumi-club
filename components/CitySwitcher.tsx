@@ -14,7 +14,7 @@ export default function CitySwitcher() {
     (c) => pathname === `/${c.value}` || pathname.startsWith(`/${c.value}/`)
   );
 
-  const label = currentCity ? currentCity.labelJa : "Australia";
+  const label = currentCity ? currentCity.labelJa : "AUS·NZ";
 
   useEffect(() => {
     function onPointerDown(e: MouseEvent) {
@@ -67,8 +67,8 @@ export default function CitySwitcher() {
             onClick={() => go("/")}
             className={rowClass(!currentCity)}
           >
-            <span>Australia</span>
-            <span className="text-[11px] text-[#a9a0bb]">全国</span>
+            <span>AUS/NZ</span>
+            <span className="text-[11px] text-[#a9a0bb]">すべて</span>
           </button>
 
           <div className="px-4 pb-1 pt-2 text-[10px] font-bold uppercase tracking-wide text-[#7a728c]">
