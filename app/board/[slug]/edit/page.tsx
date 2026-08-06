@@ -12,7 +12,6 @@ type BoardPost = {
   body: string | null;
   excerpt: string | null;
   category: string;
-  audience: string | null;
   author_id: string;
   thumbnail_url: string | null;
   thumbnail_small_url: string | null;
@@ -44,9 +43,8 @@ export default function EditPage() {
   const [body, setBody] = useState("");
   const [excerpt, setExcerpt] = useState("");
   const [category, setCategory] = useState("");
-  const [audience, setAudience] = useState("all");
   const [industry, setIndustry] = useState("");
-  const [city, setCity] = useState("sydney");
+  const [city, setCity] = useState("");
   const [location, setLocation] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [thumbnailSmallUrl, setThumbnailSmallUrl] = useState("");
@@ -260,7 +258,7 @@ export default function EditPage() {
         const { data, error } = await supabase
           .from("board_posts")
           .select(
-            "id, title, body, excerpt, category, audience, industry, city, location, author_id, thumbnail_url, thumbnail_small_url"
+            "id, title, body, excerpt, category, industry, city, location, author_id, thumbnail_url, thumbnail_small_url"
           )
           .eq("id", postId)
           .single<BoardPost>();
@@ -284,9 +282,8 @@ export default function EditPage() {
         setBody(data.body ?? "");
         setExcerpt(data.excerpt ?? "");
         setCategory(data.category ?? "blog");
-        setAudience(data.audience ?? "all");
         setIndustry(data.industry ?? "");
-        setCity(data.city ?? "sydney");
+        setCity(data.city ?? "");
         setLocation(data.location ?? "");
         setThumbnailUrl(data.thumbnail_url ?? "");
         setThumbnailSmallUrl(data.thumbnail_small_url ?? "");
@@ -365,9 +362,7 @@ export default function EditPage() {
         finalThumbnailSmallUrl = uploaded.thumbnailSmallUrl;
       }
 
-      const resolvedCity = isCityRequiredCategory(category)
-        ? city
-        : city || null;
+      const resolvedCity = city || null;
 
       let updateQuery = supabase
         .from("board_posts")
@@ -376,7 +371,7 @@ export default function EditPage() {
           body: body.trim(),
           excerpt: excerpt.trim() || null,
           category,
-          audience,
+          audience: "all",
           industry: industry || null,
           city: resolvedCity,
           location: location.trim() || null,
@@ -509,15 +504,18 @@ export default function EditPage() {
               onChange={(e) => setCity(e.target.value)}
               className="w-full border border-[#ddd6cc] bg-white px-3 py-2 text-sm outline-none"
             >
-              {!showCityRequired && (
-                <option value="">指定なし（全国）</option>
-              )}
+              <option value="">指定なし（全国）</option>
               {CITIES.map((item) => (
                 <option key={item.value} value={item.value}>
                   {item.labelJa} / {item.label}
                 </option>
               ))}
             </select>
+            <p className="mt-1 text-xs text-[#aaa39b]">
+              {showCityRequired
+                ? "求人・Q&A・口コミは都市の選択が必要です。"
+                : "未選択の場合は全国向けとして扱います。"}
+            </p>
           </div>
           <div>
             <label className="mb-1 block text-xs text-[#8e8a84]">
@@ -550,21 +548,6 @@ export default function EditPage() {
                   {item.label}
                 </option>
               ))}
-            </select>
-          </div>
-          <div>
-            <label className="mb-1 block text-xs text-[#8e8a84]">
-              Audience
-            </label>
-
-            <select
-              value={audience}
-              onChange={(e) => setAudience(e.target.value)}
-              className="w-full border border-[#ddd6cc] bg-white px-3 py-2 text-sm outline-none"
-            >
-              <option value="all">全員向け</option>
-              <option value="men">男性向け</option>
-              <option value="women">女性向け</option>
             </select>
           </div>
           <div>
