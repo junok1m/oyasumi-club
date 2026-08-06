@@ -2,15 +2,16 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { industryLabel, industryStyle } from "@/lib/industry-style";
 import SearchBar from "@/components/SearchBar";
+import { CITIES, cityLabelJa } from "@/lib/cities";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export const metadata: Metadata = {
-  title: "おやすみクラブ | シドニーで働く女の子の居場所",
+  title: "おやすみクラブ | オーストラリアで働く女の子の居場所",
   description:
-    "シドニーで働く女の子のための求人・Q&A・口コミ・ノウハウをまとめたサイトです。",
+    "シドニー・メルボルン・ブリスベンなど、オーストラリアで働く女の子のための求人・Q&A・口コミ・ノウハウをまとめたサイトです。",
   alternates: {
     canonical: "https://www.oyasumi-club.com",
   },
@@ -31,6 +32,16 @@ function formatDate(dateString?: string | null) {
 }
 
 export default async function HomePage() {
+  const cityCountPromises = CITIES.map((c) =>
+    supabase
+      .from("board_posts")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "approved")
+      .eq("city", c.value)
+      .in("category", ["jobs", "qa", "review"])
+      .then((res) => ({ city: c.value, count: res.count ?? 0 }))
+  );
+
   const [
     { data: qnaPosts },
     { data: tipsPosts },
@@ -40,6 +51,7 @@ export default async function HomePage() {
     { count: jobsCount },
     { count: reviewsCount },
     { count: blogCount },
+    ...cityCounts
   ] = await Promise.all([
     supabase
       .from("board_posts")
@@ -59,14 +71,14 @@ export default async function HomePage() {
       .limit(6),
     supabase
       .from("board_posts")
-      .select("id, title, slug, location, industry, created_at")
+      .select("id, title, slug, location, industry, city, created_at")
       .eq("status", "approved")
       .eq("category", "jobs")
       .order("created_at", { ascending: false })
       .limit(5),
     supabase
       .from("board_posts")
-      .select("id, title, excerpt, slug, location, industry, created_at")
+      .select("id, title, excerpt, slug, location, industry, city, created_at")
       .eq("status", "approved")
       .eq("category", "review")
       .order("created_at", { ascending: false })
@@ -91,6 +103,7 @@ export default async function HomePage() {
       .select("*", { count: "exact", head: true })
       .eq("status", "approved")
       .eq("category", "blog"),
+    ...cityCountPromises,
   ]);
 
   return (
@@ -101,7 +114,7 @@ export default async function HomePage() {
 
         <div className="relative mx-auto max-w-5xl">
           <h1 className="mb-4 text-[24px] font-bold leading-[1.2] tracking-[-0.04em] md:text-6xl">
-            シドニーで働く女の子の、
+            オーストラリアで働く女の子の、
             <br />
             <span className="text-pink-400">もうひとつの居場所。</span>
           </h1>
@@ -109,7 +122,7 @@ export default async function HomePage() {
           <p className="text-[13px] leading-relaxed text-[#9b7892] md:text-base">
             求人・Q&A・口コミ・ノウハウを日本語でまとめた
             <br />
-            シドニーで働く女の子のための総合ガイド
+            シドニー・メルボルン・ブリスベンの女の子のための総合ガイド
           </p>
 
           <div className="my-6">
@@ -121,7 +134,7 @@ export default async function HomePage() {
 
           <div className="flex flex-wrap gap-3">
             <Link
-              href="/jobs"
+              href="/sydney/jobs"
               className="rounded-full bg-[#4f3a4f] px-6 py-3 text-sm font-bold text-white shadow-sm"
             >
               💼 求人を見る
@@ -135,6 +148,19 @@ export default async function HomePage() {
           </div>
 
           <div className="mt-6 flex gap-2 overflow-x-auto pb-1 text-[13px]">
+            {(cityCounts as { city: string; count: number }[]).map((item) => (
+              <Link
+                key={item.city}
+                href={`/${item.city}`}
+                className="shrink-0 rounded-full border border-pink-100 bg-white/80 px-4 py-2 font-medium text-[#4f3a4f]"
+              >
+                {cityLabelJa(item.city)}
+                <span className="ml-1.5 text-[#b28aa8]">{item.count}</span>
+              </Link>
+            ))}
+          </div>
+
+          <div className="mt-3 flex gap-2 overflow-x-auto pb-1 text-[13px]">
             {[
               { label: "Q&A", href: "/qna", count: qnaCount },
               { label: "求人", href: "/jobs", count: jobsCount },
@@ -246,6 +272,11 @@ export default async function HomePage() {
                     <span className="rounded-full bg-[#4f3a4f] px-2 py-0.5 text-[10px] font-bold text-white">
                       求人
                     </span>
+                    {job.city && (
+                      <span className="rounded-full bg-pink-50 px-2 py-0.5 font-medium text-pink-500">
+                        {cityLabelJa(job.city)}
+                      </span>
+                    )}
                     {job.industry && (
                       <span className={industryStyle(job.industry)}>
                         {industryLabel(job.industry)}
@@ -289,6 +320,11 @@ export default async function HomePage() {
                 className="group block py-3.5"
               >
                 <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                  {review.city && (
+                    <span className="rounded-full bg-pink-50 px-2 py-0.5 font-medium text-pink-500">
+                      {cityLabelJa(review.city)}
+                    </span>
+                  )}
                   {review.industry && (
                     <span className={industryStyle(review.industry)}>
                       {industryLabel(review.industry)}
