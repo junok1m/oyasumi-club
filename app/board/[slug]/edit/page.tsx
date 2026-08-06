@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import RichTextEditor from "@/components/RichTextEditor";
-import { CITIES, isCityRequiredCategory } from "@/lib/cities";
+import { AU_CITIES, NZ_CITIES, isCityRequiredCategory } from "@/lib/cities";
 
 type BoardPost = {
   id: number;
@@ -328,7 +328,7 @@ export default function EditPage() {
     }
 
     if (isCityRequiredCategory(category) && !city) {
-      alert("求人・Q&A・口コミには都市を選択してください。");
+      alert("求人・口コミには都市を選択してください。");
       return;
     }
 
@@ -505,15 +505,24 @@ export default function EditPage() {
               className="w-full border border-[#ddd6cc] bg-white px-3 py-2 text-sm outline-none"
             >
               <option value="">指定なし（全国）</option>
-              {CITIES.map((item) => (
-                <option key={item.value} value={item.value}>
-                  {item.labelJa} / {item.label}
-                </option>
-              ))}
+              <optgroup label="Australia">
+                {AU_CITIES.map((item) => (
+                  <option key={item.value} value={item.value}>
+                    {item.labelJa} / {item.label}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="New Zealand">
+                {NZ_CITIES.map((item) => (
+                  <option key={item.value} value={item.value}>
+                    {item.labelJa} / {item.label}
+                  </option>
+                ))}
+              </optgroup>
             </select>
             <p className="mt-1 text-xs text-[#aaa39b]">
               {showCityRequired
-                ? "求人・Q&A・口コミは都市の選択が必要です。"
+                ? "求人・口コミは都市の選択が必要です。"
                 : "未選択の場合は全国向けとして扱います。"}
             </p>
           </div>
