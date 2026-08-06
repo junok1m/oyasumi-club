@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { getMyProfile } from "@/lib/auth";
 import RichTextEditor from "@/components/RichTextEditor";
+import { CITIES, isCityRequiredCategory } from "@/lib/cities";
 
 type MessageType = "error" | "success";
 
@@ -23,6 +24,7 @@ export default function WritePageClient() {
   const [role, setRole] = useState<string | null>(null);
   const [category, setCategory] = useState("news");
   const [industry, setIndustry] = useState("");
+  const [city, setCity] = useState("sydney");
   const [title, setTitle] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
@@ -300,6 +302,11 @@ export default function WritePageClient() {
     ) {
       setCategory(categoryParam);
     }
+
+    const cityParam = searchParams.get("city");
+    if (cityParam && CITIES.some((c) => c.value === cityParam)) {
+      setCity(cityParam);
+    }
   }, [searchParams]);
 
   useEffect(() => {
@@ -351,6 +358,14 @@ export default function WritePageClient() {
       setMessage({
         type: "error",
         text: "求人・プロモーションには業種を選択してください。",
+      });
+      return;
+    }
+
+    if (isCityRequiredCategory(category) && !city) {
+      setMessage({
+        type: "error",
+        text: "求人・Q&A・口コミには都市を選択してください。",
       });
       return;
     }
@@ -426,6 +441,10 @@ export default function WritePageClient() {
         finalThumbnailSmallUrl = uploaded.thumbnailSmallUrl;
       }
 
+      const resolvedCity = isCityRequiredCategory(category)
+        ? city
+        : city || null;
+
       const { data, error } = await supabase
         .from("board_posts")
         .insert({
@@ -434,6 +453,7 @@ export default function WritePageClient() {
           category,
           audience: "all",
           industry: industry || null,
+          city: resolvedCity,
           location: location.trim() || null,
           title: title.trim(),
           body: body.trim(),
@@ -495,6 +515,7 @@ export default function WritePageClient() {
   }
 
   const allowedCategories = getAllowedCategories(role);
+  const showCityRequired = isCityRequiredCategory(category);
 
   return (
     <main className="w-[80%] mx-auto px-6 py-8">
@@ -557,6 +578,32 @@ export default function WritePageClient() {
         </div>
 
         <div>
+          <label className="mb-1 block text-xs text-gray-500">
+            City{showCityRequired ? " *" : ""}
+          </label>
+          <select
+            value={city}
+            onChange={(e) => {
+              setCity(e.target.value);
+              setMessage(null);
+            }}
+            className="w-full border-b py-2 text-sm outline-none"
+          >
+            {!showCityRequired && <option value="">指定なし（全国）</option>}
+            {CITIES.map((item) => (
+              <option key={item.value} value={item.value}>
+                {item.labelJa} / {item.label}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-gray-400">
+            {showCityRequired
+              ? "求人・Q&A・口コミは都市の選択が必要です。"
+              : "任意です。未選択の場合は全国向けとして扱います。"}
+          </p>
+        </div>
+
+        <div>
           <label className="mb-1 block text-xs text-gray-500">Location</label>
           <input
             value={location}
@@ -568,7 +615,7 @@ export default function WritePageClient() {
             className="w-full border-b py-2 text-sm outline-none"
           />
           <p className="mt-1 text-xs text-gray-400">
-            任意です。未入力の場合は表示されません。
+            任意です。都市の中のエリアを書けます。未入力の場合は表示されません。
           </p>
         </div>
 
