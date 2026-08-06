@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import SiteHeader from "@/components/SiteHeader"
+import SiteHeader from "@/components/SiteHeader";
 import BottomNav from "@/components/BottomNav";
 import { Analytics } from "@vercel/analytics/next";
-import LineContactButton from "@/components/LineContactButton";
-
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,11 +18,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.oyasumi-club.com"),
   title: {
-    default: "おやすみクラブ | シドニー夜遊び・ナイトライフ情報",
+    default: "おやすみクラブ | シドニーで働く女の子の情報交換所",
     template: "%s | おやすみクラブ",
   },
   description:
-    "シドニーの夜遊び・夜職求人・ナイトライフ情報を日本語でチェック。求人、プロモーション、ブログ、Q&A、ガイドをまとめた日本人向け掲示板サイトです。",
+    "シドニーで働く女の子のためのQ&A・求人・口コミ・ノウハウ。ひとりで抱え込まず、先輩のリアルな話を見ていってね。",
 };
 
 export default function RootLayout({
@@ -37,16 +35,14 @@ export default function RootLayout({
       lang="ja"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-dvh flex flex-col bg-[#f7f4ee] text-[#5f5a54]">
+      <body className="min-h-dvh flex flex-col bg-[#fff7fa] text-[#4f3a4f]">
         <Analytics />
         <SiteHeader />
 
-        <main className="flex-1 pb-20">
-          {children}
-        </main>
+        <main className="flex-1 pb-20">{children}</main>
 
         <BottomNav />
-        <LineContactButton /></body>
+      </body>
     </html>
   );
 }
