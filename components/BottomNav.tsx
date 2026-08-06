@@ -37,7 +37,7 @@ function BottomNavInner() {
       path: cityFromPath ? `/${cityFromPath}/qna` : "/qna",
     },
     { icon: "📝", text: "記事", href: "/blog", path: "/blog" },
-    { icon: "👤", text: "新着", href: "/feed", path: "/feed" },
+    { icon: "👤", text: "マイページ", href: "/profile", path: "/profile" },
   ];
 
   return (
