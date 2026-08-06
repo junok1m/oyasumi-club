@@ -1,0 +1,98 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { CITIES } from "@/lib/cities";
+
+export default function CitySwitcher() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  const currentCity = CITIES.find(
+    (c) => pathname === `/${c.value}` || pathname.startsWith(`/${c.value}/`)
+  );
+
+  const label = currentCity
+    ? `${currentCity.labelJa}`
+    : "Australia";
+
+  useEffect(() => {
+    function onPointerDown(e: MouseEvent) {
+      if (!rootRef.current?.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, []);
+
+  function go(href: string) {
+    setOpen(false);
+    router.push(href);
+  }
+
+  return (
+    <div ref={rootRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-1.5 rounded-full border border-[#3a3348] bg-[#12101a] px-3 py-1.5 text-[12px] font-medium text-[#f6e7ff]"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <span aria-hidden>📍</span>
+        <span>{label}</span>
+        <span className="text-[#a9a0bb]" aria-hidden>
+          ▾
+        </span>
+      </button>
+
+      {open && (
+        <div
+          role="listbox"
+          className="absolute right-0 z-50 mt-2 min-w-[180px] overflow-hidden rounded-xl border border-[#3a3348] bg-[#12101a] py-1 shadow-xl"
+        >
+          <button
+            type="button"
+            role="option"
+            aria-selected={!currentCity}
+            onClick={() => go("/")}
+            className={`flex w-full items-center justify-between px-4 py-2.5 text-left text-[13px] ${
+              !currentCity
+                ? "bg-[#1c1828] font-semibold text-pink-300"
+                : "text-[#e8dff3] hover:bg-[#1c1828]"
+            }`}
+          >
+            <span>Australia</span>
+            <span className="text-[11px] text-[#a9a0bb]">全国</span>
+          </button>
+
+          <div className="my-1 border-t border-[#2a2438]" />
+
+          {CITIES.map((city) => {
+            const active = currentCity?.value === city.value;
+            return (
+              <button
+                key={city.value}
+                type="button"
+                role="option"
+                aria-selected={active}
+                onClick={() => go(`/${city.value}`)}
+                className={`flex w-full items-center justify-between px-4 py-2.5 text-left text-[13px] ${
+                  active
+                    ? "bg-[#1c1828] font-semibold text-pink-300"
+                    : "text-[#e8dff3] hover:bg-[#1c1828]"
+                }`}
+              >
+                <span>{city.labelJa}</span>
+                <span className="text-[11px] text-[#a9a0bb]">{city.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
