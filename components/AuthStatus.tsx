@@ -1,60 +1,88 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
 type Me = {
   id: string;
-  username: string | null;
-  display_name?: string | null;
+  display_name: string | null;
   role: string | null;
 };
 
 export default function AuthStatus() {
   const [me, setMe] = useState<Me | null>(null);
-  const shownName = me?.display_name?.trim() || me?.username || "";
+  const [loading, setLoading] = useState(true);
+  const fetchingRef = useRef(false);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function fetchMe() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      if (fetchingRef.current) return;
+      fetchingRef.current = true;
 
-      if (!user) {
-        setMe(null);
-        return;
+      try {
+        setLoading(true);
+
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (cancelled) return;
+
+        const user = session?.user;
+
+        if (!user) {
+          setMe(null);
+          return;
+        }
+
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("id, display_name, role")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (cancelled) return;
+
+        if (error) {
+          console.error("AuthStatus fetch profile error:", error);
+          setMe(null);
+          return;
+        }
+
+        setMe({
+          id: user.id,
+          display_name: profile?.display_name ?? null,
+          role: profile?.role ?? null,
+        });
+      } catch (error) {
+        if (!cancelled) {
+          console.error("AuthStatus fetchMe error:", error);
+          setMe(null);
+        }
+      } finally {
+        fetchingRef.current = false;
+
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
-
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("username, display_name, role")
-        .eq("id", user.id)
-        .single();
-
-      if (error) {
-        console.error(error);
-        return;
-      }
-
-      setMe({
-        id: user.id,
-        username: profile.username,
-        display_name: profile.display_name,
-        role: profile.role,
-      });
     }
 
     fetchMe();
 
-    // 🔥 로그인/로그아웃 실시간 반응
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(() => {
       fetchMe();
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, []);
 
   async function handleLogout() {
@@ -62,18 +90,26 @@ export default function AuthStatus() {
     window.location.href = "/login";
   }
 
-  if (!me) {
+  if (loading) {
     return (
       <div className="flex items-center gap-3 text-[12px] text-[#7d766e]">
-        <Link href="/login" className="hover:underline">
-          login
-        </Link>
-        <Link href="/signup" className="hover:underline">
-          signup
-        </Link>
+        <span>...</span>
       </div>
     );
   }
+
+  if (!me) {
+    return (
+      <div className="flex items-center gap-3 text-[12px] text-[#7d766e]">
+        <Link href="/login" className="text-sm">
+          ログイン
+        </Link>
+        
+      </div>
+    );
+  }
+
+  const shownName = me.display_name?.trim() || "profile";
 
   return (
     <div className="flex items-center gap-3 text-[12px] text-[#7d766e]">
@@ -81,7 +117,7 @@ export default function AuthStatus() {
         <Link href="/profile">{shownName}</Link>
         {me.role ? ` (${me.role})` : ""}
       </span>
-      <button onClick={handleLogout} className="hover:underline">
+      <button type="button" onClick={handleLogout} className="hover:underline">
         logout
       </button>
     </div>

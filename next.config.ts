@@ -1,7 +1,14 @@
-import type { NextConfig } from "next";
+// next.config.ts
 
-const nextConfig: NextConfig = {
-  /* config options here */
+const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "i.ibb.co",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

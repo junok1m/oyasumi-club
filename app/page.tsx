@@ -1,154 +1,134 @@
-import React from "react";
-import Link from "next/link";
 import { supabaseServer } from "@/lib/supabase-server";
-import HomeFeedSection from "./HomeFeedSection";
-import FeaturedCarousel from "./FeaturedCarousel";
+import type { Metadata } from "next";
+import IndustryBrowse from "@/components/IndustryBrowse";
+import { HomeAdminPickShops } from "@/components/HomeAdminPickShops";
+import LocationPills from "@/components/location/LocationPills";
+import RecentBlogPosts from "@/components/RecentBlogPosts";
+import SearchBar from "@/components/SearchBar";
 
-type BoardPost = {
-  id: number;
-  title: string;
-  category: string;
-  views: number;
-  created_at: string;
-  pretty_slug: string;
+export const metadata: Metadata = {
+  title: "おやすみクラブ | シドニー夜遊び・ナイトライフ情報",
+  description:
+    "おやすみクラブは、シドニーの夜遊び・ナイトライフ情報を日本語で探せる掲示板サイトです。お店情報、ブログ、ガイドをまとめてチェックできます。",
+  alternates: {
+    canonical: "https://www.oyasumi-club.com",
+  },
 };
 
-type FeaturedPost = {
-  id: number;
-  title: string;
-  category: string;
-  views: number;
-  created_at: string;
-  pretty_slug: string;
-  thumbnail: string | null;
-};
-
-type FeedPost = {
-  id: number;
-  image: string;
-  caption?: string;
-  created_at: string;
-};
-
-async function getFeaturedPosts(): Promise<FeaturedPost[]> {
+async function getAdminPickShops() {
   const supabase = await supabaseServer();
 
   const { data, error } = await supabase
-    .from("board_posts")
-    .select("id, title, category, views, created_at, slug, thumbnail_url")
-    .eq("is_featured", true)
-    .not("thumbnail_url", "is", null)
-    .neq("thumbnail_url", "")
-    .order("created_at", { ascending: false })
-    .limit(3);
-
-  if (error || !data) {
-    console.error("getFeaturedPosts error:", error);
-    return [];
-  }
-
-  return data.map((post) => ({
-    id: post.id,
-    title: post.title,
-    category: post.category,
-    views: post.views,
-    created_at: post.created_at,
-    pretty_slug: post.slug ? `${post.id}-${post.slug}` : `${post.id}`,
-    thumbnail: post.thumbnail_url,
-  }));
-}
-
-async function getPopularPosts(): Promise<BoardPost[]> {
-  const supabase = await supabaseServer();
-
-  const { data, error } = await supabase
-    .from("board_posts")
-    .select("id, title, category, views, created_at, slug")
-    .order("views", { ascending: false })
+    .from("guide_posts")
+    .select(`
+      id,
+      title,
+      slug,
+      industry,
+      location,
+      thumbnail_url,
+      thumbnail_small_url,
+      created_at,
+      excerpt
+    `)
+    .eq("status", "approved")
     .order("created_at", { ascending: false })
     .limit(5);
 
   if (error || !data) {
-    console.error("getPopularPosts error:", error);
+    console.error("getAdminPickShops error:", error);
     return [];
   }
 
-  return data.map((post) => ({
-    id: post.id,
-    title: post.title,
-    category: post.category,
-    views: post.views,
-    created_at: post.created_at,
-    pretty_slug: post.slug ? `${post.id}-${post.slug}` : `${post.id}`,
-  }));
-}
-
-async function getLatestFeed(): Promise<FeedPost[]> {
-  const supabase = await supabaseServer();
-
-  const { data, error } = await supabase
-    .from("feed_posts")
-    .select("id, image_url, caption, created_at")
-    .order("created_at", { ascending: false })
-    .limit(6);
-
-  if (error || !data) {
-    console.error("getLatestFeed error:", error);
-    return [];
-  }
-
-  return data.map((post) => ({
-    id: post.id,
-    image: post.image_url,
-    caption: post.caption ?? undefined,
-    created_at: post.created_at,
-  }));
+  return data;
 }
 
 export default async function HomePage() {
-  const [featuredPosts, posts, feeds] = await Promise.all([
-    getFeaturedPosts(),
-    getPopularPosts(),
-    getLatestFeed(),
-  ]);
+  const supabase = await supabaseServer();
+
+  const { data: recentBlogPosts } = await supabase
+    .from("board_posts")
+    .select(`
+      id,
+      title,
+      slug,
+      thumbnail_url,
+      thumbnail_small_url,
+      excerpt
+    `)
+    .eq("category", "blog")
+    .eq("status", "approved")
+    .in("audience", ["all", "men"])
+    .order("created_at", { ascending: false })
+    .limit(5);
+
+  const [{ data: boardIndustryPosts }, { data: guideIndustryPosts }] =
+    await Promise.all([
+      supabase
+        .from("board_posts")
+        .select("industry")
+        .eq("status", "approved")
+        .in("audience", ["all", "men"]),
+
+      supabase
+        .from("guide_posts")
+        .select("industry")
+        .eq("status", "approved"),
+    ]);
+
+  const industryCounts = [
+    ...(boardIndustryPosts ?? []),
+    ...(guideIndustryPosts ?? []),
+  ].reduce((acc, post) => {
+    if (!post.industry) return acc;
+    acc[post.industry] = (acc[post.industry] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const adminPickShops = await getAdminPickShops();
 
   return (
-    <main className="min-h-screen bg-[#f7f4ee] text-[#5f5a54]">
-      <div className="mx-auto w-[92%] max-w-5xl py-10 space-y-14">
-        {featuredPosts.length > 0 && (
-          <FeaturedCarousel posts={featuredPosts} />
-        )}
+   <main className="-mb-24 min-h-dvh bg-[#151c28] text-[#d6dde7]">
+  <div className="mx-auto w-[92%] max-w-5xl space-y-14 py-10">
+    <section className="relative overflow-hidden">
+      <div className="absolute -right-20 -top-8 h-56 w-56 rounded-full blur-3xl" />
+      <div className="absolute -left-20 top-24 h-56 w-56 rounded-full  blur-3xl" />
 
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-[18px] text-[#4f4a45]">Hot Posts ♡</h2>
-            <Link href="/board" className="text-sm text-[#8b847b] hover:text-[#4f4a45]">
-              View all
-            </Link>
-          </div>
+      <div className="relative">
+        <h1 className="mb-4 text-[24px] font-bold leading-[1.2] tracking-[-0.04em] text-[#f8fafc] md:text-6xl">
+          シドニーで遊ぶ男の、
+          <br />
+          <span className="text-cyan-400">
+            もうひとつの居場所。
+          </span>
+        </h1>
 
-          {posts.length === 0 ? (
-            <p className="text-sm text-[#999]">No posts yet.</p>
-          ) : (
-            <div className="space-y-3">
-              {posts.map((post) => (
-                <Link
-                  key={post.id}
-                  href={`/board/${post.pretty_slug}`}
-                  className="block border-b border-[#e8e1d8] pb-3"
-                >
-                  <p className="text-[14px] text-[#4f4a45]">{post.title}</p>
-                  <p className="mt-1 text-[11px] text-[#999]">
-                    {post.category} · {post.views} views
-                  </p>
-                </Link>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <HomeFeedSection />
+        <p className="text-[13px] leading-relaxed text-slate-400 md:text-base">
+          お店情報・口コミ・読み物を日本語でまとめた
+          <br />
+          シドニー夜遊び・ナイトライフの総合ガイド
+        </p>
       </div>
-    </main>
+    </section>
+
+    <SearchBar
+      audience="men"
+      placeholder="お店・記事・Q&Aを検索..."
+    />
+
+    <IndustryBrowse counts={industryCounts} />
+
+    <LocationPills
+      source="all"
+      basePath="/location"
+    />
+
+    <HomeAdminPickShops posts={adminPickShops} />
+
+   <section className="pb-24">
+  <RecentBlogPosts posts={recentBlogPosts ?? []} />
+</section>
+  </div>
+</main>
   );
 }

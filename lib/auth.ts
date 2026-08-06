@@ -12,9 +12,9 @@ export async function getMyProfile() {
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("*")
+    .select("id, email, role, display_name, work_category, location, bio, website, phone")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
   if (profileError) {
     console.error("Profile fetch failed:", profileError);

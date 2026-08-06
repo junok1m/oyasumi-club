@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import SiteHeader from "@/components/SiteHeader"
+import BottomNav from "@/components/BottomNav";
+import { Analytics } from "@vercel/analytics/next";
+import LineContactButton from "@/components/LineContactButton";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,8 +18,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "おやすみクラブ🌙",
-  description: "シドニーナイトライフはここにあります。",
+  metadataBase: new URL("https://www.oyasumi-club.com"),
+  title: {
+    default: "おやすみクラブ | シドニー夜遊び・ナイトライフ情報",
+    template: "%s | おやすみクラブ",
+  },
+  description:
+    "シドニーの夜遊び・夜職求人・ナイトライフ情報を日本語でチェック。求人、プロモーション、ブログ、Q&A、ガイドをまとめた日本人向け掲示板サイトです。",
 };
 
 export default function RootLayout({
@@ -25,30 +34,19 @@ export default function RootLayout({
 }) {
   return (
     <html
-      lang="en"
+      lang="ja"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#f7f4ee] text-[#5f5a54]">
-
-        {/* 🔥 여기 핵심 */}
+      <body className="min-h-dvh flex flex-col bg-[#f7f4ee] text-[#5f5a54]">
+        <Analytics />
         <SiteHeader />
 
-        <main className="flex-1">
+        <main className="flex-1 pb-20">
           {children}
         </main>
-{/* footer */}
-<footer className="mt-20 pb-8 text-center text-[11px] text-[#9a948d]">
-  <span className="opacity-70">built by </span>
-  <a
-    href="https://aaot.vercel.app"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="hover:text-[#5a544e] transition"
-  >
-    aaot
-  </a>
-</footer>
-      </body>
+
+        <BottomNav />
+        <LineContactButton /></body>
     </html>
   );
 }

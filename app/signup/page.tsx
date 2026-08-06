@@ -17,12 +17,13 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
           data: {
-            role, // 👉 profiles trigger에서 사용됨
+            role,
           },
         },
       });
