@@ -181,10 +181,6 @@ export default async function JobsDetailPage({
         </div>
 
         <article>
-          <div className="mb-3 text-[12px] font-medium text-pink-400">
-            💜 Oyasumi Girls
-          </div>
-
           <h1 className="text-[30px] font-medium leading-[1.18] tracking-[-0.02em] text-[#4f3a4f] md:text-[40px]">
             {post.title}
           </h1>
