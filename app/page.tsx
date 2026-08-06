@@ -66,7 +66,7 @@ export default async function HomePage() {
       .limit(5),
     supabase
       .from("board_posts")
-      .select("id, title, slug, location, industry, created_at")
+      .select("id, title, excerpt, slug, location, industry, created_at")
       .eq("status", "approved")
       .eq("category", "review")
       .order("created_at", { ascending: false })
@@ -95,22 +95,22 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-dvh bg-[#fff4f8] text-[#4f3a4f]">
-      {/* Hero — original tone */}
-      <section className="relative overflow-hidden px-5 pb-6 pt-10">
-        <div className="absolute -right-16 top-10 h-44 w-44 rounded-full bg-pink-200/60 blur-3xl" />
-        <div className="absolute -left-16 top-52 h-44 w-44 rounded-full bg-purple-200/50 blur-3xl" />
+      {/* Hero — original structure */}
+      <section className="relative overflow-hidden px-5 pb-8 pt-10">
+        <div className="absolute -right-20 -top-8 h-56 w-56 rounded-full bg-pink-200/50 blur-3xl" />
+        <div className="absolute -left-20 top-24 h-56 w-56 rounded-full bg-purple-200/40 blur-3xl" />
 
         <div className="relative mx-auto max-w-5xl">
-          <h1 className="max-w-3xl text-[24px] font-bold leading-[1.2] tracking-[-0.04em] md:text-5xl">
+          <h1 className="mb-4 text-[24px] font-bold leading-[1.2] tracking-[-0.04em] md:text-6xl">
             シドニーで働く女の子の、
             <br />
             <span className="text-pink-400">もうひとつの居場所。</span>
           </h1>
 
-          <p className="mt-5 max-w-xl text-sm leading-7 text-[#9b7892] md:text-base">
-            求人・Q&A・口コミ・ノウハウを、
-            <br className="hidden md:block" />
-            女の子目線でまとめました。
+          <p className="text-[13px] leading-relaxed text-[#9b7892] md:text-base">
+            求人・Q&A・口コミ・ノウハウを日本語でまとめた
+            <br />
+            シドニーで働く女の子のための総合ガイド
           </p>
 
           <div className="my-6">
@@ -157,8 +157,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Q&A — flat list */}
-      <section className="mx-auto mt-8 w-[92%] max-w-5xl">
+      {/* Q&A — accent bar + reply badge */}
+      <section className="mx-auto mt-6 w-[92%] max-w-5xl">
         <div className="mb-3 flex items-end justify-between">
           <div>
             <p className="text-[11px] font-bold text-pink-400">RECENT QUESTIONS</p>
@@ -172,26 +172,35 @@ export default async function HomePage() {
         {(qnaPosts ?? []).length === 0 ? (
           <p className="py-6 text-sm text-[#9b7892]">まだ質問がありません。</p>
         ) : (
-          <div className="divide-y divide-pink-100">
-            {(qnaPosts ?? []).map((post) => {
+          <div className="space-y-0">
+            {(qnaPosts ?? []).map((post, i) => {
               const replies = post.comments?.[0]?.count ?? 0;
               return (
                 <Link
                   key={post.id}
                   href={`/qna/${prettySlug(post)}#comments`}
-                  className="group block py-3.5"
+                  className={`group flex gap-3 border-b border-pink-100 py-3.5 ${
+                    i === 0 ? "pt-0" : ""
+                  }`}
                 >
-                  <div className="flex items-center gap-2 text-[11px]">
-                    <span className="font-semibold text-pink-500">
-                      {replies}件の回答
-                    </span>
-                    <span className="text-[#b3a3b1]">
-                      {formatDate(post.created_at)}
-                    </span>
+                  <div className="mt-0.5 w-0.5 shrink-0 self-stretch rounded-full bg-pink-300" />
+                  <div className="min-w-0 flex-1">
+                    <h3
+                      className={`line-clamp-2 font-semibold leading-5 text-[#4f3a4f] group-hover:text-pink-500 ${
+                        i === 0 ? "text-[16px]" : "text-[15px]"
+                      }`}
+                    >
+                      {post.title}
+                    </h3>
+                    <div className="mt-1.5 flex items-center gap-2 text-[11px]">
+                      <span className="rounded-full bg-pink-50 px-2 py-0.5 font-semibold text-pink-500">
+                        💬 {replies}
+                      </span>
+                      <span className="text-[#b3a3b1]">
+                        {formatDate(post.created_at)}
+                      </span>
+                    </div>
                   </div>
-                  <h3 className="mt-1 line-clamp-2 text-[15px] font-semibold leading-5 text-[#4f3a4f] group-hover:text-pink-500">
-                    {post.title}
-                  </h3>
                 </Link>
               );
             })}
@@ -199,7 +208,7 @@ export default async function HomePage() {
         )}
       </section>
 
-      {/* Safety mid-page */}
+      {/* Safety */}
       <section className="mx-auto mt-8 w-[92%] max-w-5xl">
         <div className="rounded-2xl border border-pink-100 bg-[#fff0f5] px-5 py-4">
           <p className="text-[12px] font-bold text-pink-500">安全のために</p>
@@ -216,51 +225,56 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Jobs — flat list */}
-      <section className="mx-auto mt-10 w-[92%] max-w-5xl">
-        <div className="mb-3 flex items-end justify-between">
-          <div>
-            <p className="text-[11px] font-bold text-pink-400">HIRING NOW</p>
-            <h2 className="text-lg font-bold">新着求人</h2>
+      {/* Jobs — chips on top, soft section bg */}
+      <section className="mt-10 bg-[#fff0f6]/60 py-8">
+        <div className="mx-auto w-[92%] max-w-5xl">
+          <div className="mb-3 flex items-end justify-between">
+            <div>
+              <p className="text-[11px] font-bold text-pink-400">HIRING NOW</p>
+              <h2 className="text-lg font-bold">新着求人</h2>
+            </div>
+            <Link href="/jobs" className="text-[13px] font-bold text-pink-500">
+              もっと見る →
+            </Link>
           </div>
-          <Link href="/jobs" className="text-[13px] font-bold text-pink-500">
-            もっと見る →
-          </Link>
-        </div>
 
-        {(jobs ?? []).length === 0 ? (
-          <p className="py-6 text-sm text-[#9b7892]">まだ求人がありません。</p>
-        ) : (
-          <div className="divide-y divide-pink-100">
-            {(jobs ?? []).map((job) => (
-              <Link
-                key={job.id}
-                href={`/jobs/${prettySlug(job)}`}
-                className="group block py-3.5"
-              >
-                <div className="flex flex-wrap items-center gap-2 text-[11px]">
-                  {job.industry && (
-                    <span className={industryStyle(job.industry)}>
-                      {industryLabel(job.industry)}
+          {(jobs ?? []).length === 0 ? (
+            <p className="py-6 text-sm text-[#9b7892]">まだ求人がありません。</p>
+          ) : (
+            <div className="divide-y divide-pink-100/80">
+              {(jobs ?? []).map((job) => (
+                <Link
+                  key={job.id}
+                  href={`/jobs/${prettySlug(job)}`}
+                  className="group block py-4"
+                >
+                  <div className="mb-1.5 flex flex-wrap items-center gap-2 text-[11px]">
+                    <span className="rounded-full bg-[#4f3a4f] px-2 py-0.5 text-[10px] font-bold text-white">
+                      求人
                     </span>
-                  )}
-                  {job.location && (
-                    <span className="text-[#9b7892]">📍 {job.location}</span>
-                  )}
-                  <span className="text-[#b3a3b1]">
-                    {formatDate(job.created_at)}
-                  </span>
-                </div>
-                <h3 className="mt-1 line-clamp-2 text-[15px] font-semibold leading-5 text-[#4f3a4f] group-hover:text-pink-500">
-                  {job.title}
-                </h3>
-              </Link>
-            ))}
-          </div>
-        )}
+                    {job.industry && (
+                      <span className={industryStyle(job.industry)}>
+                        {industryLabel(job.industry)}
+                      </span>
+                    )}
+                    {job.location && (
+                      <span className="text-[#9b7892]">📍 {job.location}</span>
+                    )}
+                    <span className="text-[#b3a3b1]">
+                      {formatDate(job.created_at)}
+                    </span>
+                  </div>
+                  <h3 className="line-clamp-2 text-[15px] font-semibold leading-5 text-[#4f3a4f] group-hover:text-pink-500">
+                    {job.title}
+                  </h3>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       </section>
 
-      {/* Reviews — flat list */}
+      {/* Reviews — title + soft excerpt */}
       <section className="mx-auto mt-10 w-[92%] max-w-5xl">
         <div className="mb-3 flex items-end justify-between">
           <div>
@@ -295,16 +309,21 @@ export default async function HomePage() {
                     {formatDate(review.created_at)}
                   </span>
                 </div>
-                <h3 className="mt-1 line-clamp-2 text-[15px] font-semibold leading-5 text-[#4f3a4f] group-hover:text-pink-500">
+                <h3 className="mt-1 line-clamp-1 text-[15px] font-semibold leading-5 text-[#4f3a4f] group-hover:text-pink-500">
                   {review.title}
                 </h3>
+                {review.excerpt && (
+                  <p className="mt-1 line-clamp-2 text-[12px] leading-5 text-[#9b7892]">
+                    {review.excerpt}
+                  </p>
+                )}
               </Link>
             ))}
           </div>
         )}
       </section>
 
-      {/* Blog — horizontal carousel */}
+      {/* Blog carousel */}
       <section className="mx-auto mt-10 w-[92%] max-w-5xl">
         <div className="mb-3 flex items-end justify-between">
           <div>
@@ -328,13 +347,15 @@ export default async function HomePage() {
                   className="w-[200px] shrink-0 overflow-hidden rounded-2xl border border-pink-100 bg-white/80"
                 >
                   <div className="aspect-[16/10] w-full bg-pink-50">
-                    {(post.thumbnail_small_url || post.thumbnail_url) ? (
+                    {(post.thumbnail_small_url || post.thumbnail_url) && (
                       <img
-                        src={post.thumbnail_small_url || post.thumbnail_url || ""}
+                        src={
+                          post.thumbnail_small_url || post.thumbnail_url || ""
+                        }
                         alt=""
                         className="h-full w-full object-cover"
                       />
-                    ) : null}
+                    )}
                   </div>
                   <div className="p-3">
                     <h3 className="line-clamp-2 text-[13px] font-bold leading-5 text-[#4f3a4f]">
