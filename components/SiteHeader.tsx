@@ -1,5 +1,5 @@
 import Link from "next/link";
-import AuthStatus from "./AuthStatus";
+import CitySwitcher from "./CitySwitcher";
 
 export default function SiteHeader() {
   return (
@@ -13,7 +13,7 @@ export default function SiteHeader() {
         </Link>
 
         <div className="flex items-center gap-3">
-          <AuthStatus />
+          <CitySwitcher />
         </div>
       </div>
     </header>
