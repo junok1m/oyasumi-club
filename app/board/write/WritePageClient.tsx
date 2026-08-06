@@ -22,7 +22,6 @@ export default function WritePageClient() {
   const searchParams = useSearchParams();
   const [role, setRole] = useState<string | null>(null);
   const [category, setCategory] = useState("news");
-  const [audience, setAudience] = useState<"all" | "men" | "women">("all");
   const [industry, setIndustry] = useState("");
   const [title, setTitle] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
@@ -291,24 +290,18 @@ export default function WritePageClient() {
 
     fetchMe();
   }, [router]);
+
   useEffect(() => {
-  const categoryParam = searchParams.get("category");
-  const audienceParam = searchParams.get("audience");
+    const categoryParam = searchParams.get("category");
 
-  if (
-    categoryParam &&
-    ["news", "blog", "jobs", "promo", "qa", "review"].includes(categoryParam)
-  ) {
-    setCategory(categoryParam);
-  }
+    if (
+      categoryParam &&
+      ["news", "blog", "jobs", "promo", "qa", "review"].includes(categoryParam)
+    ) {
+      setCategory(categoryParam);
+    }
+  }, [searchParams]);
 
-  if (
-    audienceParam &&
-    ["all", "men", "women"].includes(audienceParam)
-  ) {
-    setAudience(audienceParam as "all" | "men" | "women");
-  }
-}, [searchParams]);
   useEffect(() => {
     return () => {
       if (thumbnailPreviewUrl) {
@@ -439,7 +432,7 @@ export default function WritePageClient() {
           author_id: user.id,
           like_boost: Math.floor(Math.random() * 8),
           category,
-          audience,
+          audience: "all",
           industry: industry || null,
           location: location.trim() || null,
           title: title.trim(),
@@ -509,10 +502,11 @@ export default function WritePageClient() {
 
       {message && (
         <div
-          className={`mb-6 rounded-md px-4 py-3 text-sm ${message.type === "error"
-            ? "border border-orange-200 bg-orange-50 text-orange-700"
-            : "border border-green-200 bg-green-50 text-green-700"
-            }`}
+          className={`mb-6 rounded-md px-4 py-3 text-sm ${
+            message.type === "error"
+              ? "border border-orange-200 bg-orange-50 text-orange-700"
+              : "border border-green-200 bg-green-50 text-green-700"
+          }`}
         >
           {message.text}
         </div>
@@ -542,21 +536,6 @@ export default function WritePageClient() {
             </p>
           )}
         </div>
-        <div>
-          <label className="mb-1 block text-xs text-gray-500">Audience</label>
-          <select
-            value={audience}
-            onChange={(e) => {
-              setAudience(e.target.value as "all" | "men" | "women");
-              setMessage(null);
-            }}
-            className="w-full border-b py-2 text-sm outline-none"
-          >
-            <option value="all">全員向け</option>
-            <option value="men">男性向け</option>
-            <option value="women">女性向け</option>
-          </select>
-        </div>
 
         <div>
           <label className="mb-1 block text-xs text-gray-500">Industry</label>
@@ -567,7 +546,8 @@ export default function WritePageClient() {
               setMessage(null);
             }}
             className="w-full border-b py-2 text-sm outline-none"
-          ><option value="">業種を選択</option>
+          >
+            <option value="">業種を選択</option>
             {getIndustries().map((item) => (
               <option key={item.value} value={item.value}>
                 {item.label}
@@ -575,10 +555,9 @@ export default function WritePageClient() {
             ))}
           </select>
         </div>
+
         <div>
-          <label className="mb-1 block text-xs text-gray-500">
-            Location
-          </label>
+          <label className="mb-1 block text-xs text-gray-500">Location</label>
           <input
             value={location}
             onChange={(e) => {
@@ -647,6 +626,7 @@ export default function WritePageClient() {
             画像をアップロードした場合は、そちらが優先して使用されます。
           </p>
         </div>
+
         <div>
           <label className="mb-2 block text-xs text-gray-500">Body</label>
           <RichTextEditor value={body} onChange={setBody} />
