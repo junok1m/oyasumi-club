@@ -95,7 +95,6 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-dvh bg-[#fff4f8] text-[#4f3a4f]">
-      {/* Hero — original structure */}
       <section className="relative overflow-hidden px-5 pb-8 pt-10">
         <div className="absolute -right-20 -top-8 h-56 w-56 rounded-full bg-pink-200/50 blur-3xl" />
         <div className="absolute -left-20 top-24 h-56 w-56 rounded-full bg-purple-200/40 blur-3xl" />
@@ -157,13 +156,11 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Q&A — accent bar + reply badge */}
       <section className="mx-auto mt-6 w-[92%] max-w-5xl">
-        <div className="mb-3 flex items-end justify-between">
-          <div>
-            <p className="text-[11px] font-bold text-pink-400">RECENT QUESTIONS</p>
-            <h2 className="text-lg font-bold">最近のQ&A</h2>
-          </div>
+        <div className="mb-4 flex items-end justify-between">
+          <h2 className="text-[20px] font-bold tracking-tight text-[#4f3a4f]">
+            最近のQ&A
+          </h2>
           <Link href="/qna" className="text-[13px] font-bold text-pink-500">
             もっと見る →
           </Link>
@@ -208,10 +205,9 @@ export default async function HomePage() {
         )}
       </section>
 
-      {/* Safety */}
       <section className="mx-auto mt-8 w-[92%] max-w-5xl">
         <div className="rounded-2xl border border-pink-100 bg-[#fff0f5] px-5 py-4">
-          <p className="text-[12px] font-bold text-pink-500">安全のために</p>
+          <p className="text-[13px] font-bold text-pink-500">安全のために</p>
           <p className="mt-1.5 text-[13px] leading-6 text-[#8f6f89]">
             契約前に仕事内容・給与・ルールは必ず確認してね。
             困ったときは一人で抱え込まず、すぐ相談してOK。
@@ -225,14 +221,12 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Jobs — chips on top, soft section bg */}
       <section className="mt-10 bg-[#fff0f6]/60 py-8">
         <div className="mx-auto w-[92%] max-w-5xl">
-          <div className="mb-3 flex items-end justify-between">
-            <div>
-              <p className="text-[11px] font-bold text-pink-400">HIRING NOW</p>
-              <h2 className="text-lg font-bold">新着求人</h2>
-            </div>
+          <div className="mb-4 flex items-end justify-between">
+            <h2 className="text-[20px] font-bold tracking-tight text-[#4f3a4f]">
+              新着求人
+            </h2>
             <Link href="/jobs" className="text-[13px] font-bold text-pink-500">
               もっと見る →
             </Link>
@@ -274,13 +268,11 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Reviews — title + soft excerpt */}
       <section className="mx-auto mt-10 w-[92%] max-w-5xl">
-        <div className="mb-3 flex items-end justify-between">
-          <div>
-            <p className="text-[11px] font-bold text-pink-400">SHOP REVIEWS</p>
-            <h2 className="text-lg font-bold">お店の口コミ</h2>
-          </div>
+        <div className="mb-4 flex items-end justify-between">
+          <h2 className="text-[20px] font-bold tracking-tight text-[#4f3a4f]">
+            お店の口コミ
+          </h2>
           <Link href="/reviews" className="text-[13px] font-bold text-pink-500">
             もっと見る →
           </Link>
@@ -323,13 +315,11 @@ export default async function HomePage() {
         )}
       </section>
 
-      {/* Blog carousel */}
       <section className="mx-auto mt-10 w-[92%] max-w-5xl">
-        <div className="mb-3 flex items-end justify-between">
-          <div>
-            <p className="text-[11px] font-bold text-pink-400">COLUMN</p>
-            <h2 className="text-lg font-bold">ノウハウ記事</h2>
-          </div>
+        <div className="mb-4 flex items-end justify-between">
+          <h2 className="text-[20px] font-bold tracking-tight text-[#4f3a4f]">
+            ノウハウ記事
+          </h2>
           <Link href="/blog" className="text-[13px] font-bold text-pink-500">
             もっと見る →
           </Link>
@@ -369,10 +359,9 @@ export default async function HomePage() {
         )}
       </section>
 
-      {/* LINE CTA */}
       <section className="mx-auto mt-12 mb-8 w-[92%] max-w-5xl">
         <div className="rounded-2xl border border-pink-100 bg-white px-6 py-8 text-center">
-          <p className="text-[12px] font-bold text-pink-400">運営に相談</p>
+          <p className="text-[13px] font-bold text-pink-400">運営に相談</p>
           <h2 className="mt-2 text-[20px] font-bold leading-snug">
             わからないこと、
             <br />
