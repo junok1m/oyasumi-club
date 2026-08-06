@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import RichTextEditor from "@/components/RichTextEditor";
+import { CITIES, isCityRequiredCategory } from "@/lib/cities";
 
 type BoardPost = {
   id: number;
@@ -16,6 +17,7 @@ type BoardPost = {
   thumbnail_url: string | null;
   thumbnail_small_url: string | null;
   industry: string | null;
+  city: string | null;
   location: string | null;
 };
 
@@ -44,6 +46,7 @@ export default function EditPage() {
   const [category, setCategory] = useState("");
   const [audience, setAudience] = useState("all");
   const [industry, setIndustry] = useState("");
+  const [city, setCity] = useState("sydney");
   const [location, setLocation] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [thumbnailSmallUrl, setThumbnailSmallUrl] = useState("");
@@ -254,11 +257,10 @@ export default function EditPage() {
           return;
         }
 
-
         const { data, error } = await supabase
           .from("board_posts")
           .select(
-            "id, title, body, excerpt, category, audience, industry, location, author_id, thumbnail_url, thumbnail_small_url"
+            "id, title, body, excerpt, category, audience, industry, city, location, author_id, thumbnail_url, thumbnail_small_url"
           )
           .eq("id", postId)
           .single<BoardPost>();
@@ -284,6 +286,7 @@ export default function EditPage() {
         setCategory(data.category ?? "blog");
         setAudience(data.audience ?? "all");
         setIndustry(data.industry ?? "");
+        setCity(data.city ?? "sydney");
         setLocation(data.location ?? "");
         setThumbnailUrl(data.thumbnail_url ?? "");
         setThumbnailSmallUrl(data.thumbnail_small_url ?? "");
@@ -327,6 +330,11 @@ export default function EditPage() {
       return;
     }
 
+    if (isCityRequiredCategory(category) && !city) {
+      alert("求人・Q&A・口コミには都市を選択してください。");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -348,7 +356,6 @@ export default function EditPage() {
         return;
       }
 
-
       let finalThumbnailUrl = thumbnailUrl.trim() || null;
       let finalThumbnailSmallUrl = thumbnailSmallUrl.trim() || null;
 
@@ -357,6 +364,10 @@ export default function EditPage() {
         finalThumbnailUrl = uploaded.thumbnailUrl;
         finalThumbnailSmallUrl = uploaded.thumbnailSmallUrl;
       }
+
+      const resolvedCity = isCityRequiredCategory(category)
+        ? city
+        : city || null;
 
       let updateQuery = supabase
         .from("board_posts")
@@ -367,6 +378,7 @@ export default function EditPage() {
           category,
           audience,
           industry: industry || null,
+          city: resolvedCity,
           location: location.trim() || null,
           thumbnail_url: finalThumbnailUrl,
           thumbnail_small_url: finalThumbnailSmallUrl,
@@ -400,6 +412,7 @@ export default function EditPage() {
   }
 
   const currentImageUrl = thumbnailPreviewUrl || thumbnailUrl || thumbnailSmallUrl;
+  const showCityRequired = isCityRequiredCategory(category);
 
   return (
     <main className="min-h-screen bg-[#f7f4ee] text-[#5f5a54]">
@@ -489,6 +502,25 @@ export default function EditPage() {
           />
           <div>
             <label className="mb-1 block text-xs text-[#8e8a84]">
+              City{showCityRequired ? " *" : ""}
+            </label>
+            <select
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              className="w-full border border-[#ddd6cc] bg-white px-3 py-2 text-sm outline-none"
+            >
+              {!showCityRequired && (
+                <option value="">指定なし（全国）</option>
+              )}
+              {CITIES.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.labelJa} / {item.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-[#8e8a84]">
               Location
             </label>
 
@@ -500,7 +532,7 @@ export default function EditPage() {
             />
 
             <p className="mt-1 text-xs text-[#aaa39b]">
-              任意です。未入力の場合は表示されません。
+              任意です。都市の中のエリアを書けます。
             </p>
           </div>
           <div>
@@ -511,7 +543,8 @@ export default function EditPage() {
               value={industry}
               onChange={(e) => setIndustry(e.target.value)}
               className="w-full border border-[#ddd6cc] bg-white px-3 py-2 text-sm outline-none"
-            >  <option value="">なし</option>
+            >
+              <option value="">なし</option>
               {getIndustries().map((item) => (
                 <option key={item.value} value={item.value}>
                   {item.label}
@@ -520,20 +553,20 @@ export default function EditPage() {
             </select>
           </div>
           <div>
-  <label className="mb-1 block text-xs text-[#8e8a84]">
-    Audience
-  </label>
+            <label className="mb-1 block text-xs text-[#8e8a84]">
+              Audience
+            </label>
 
-  <select
-    value={audience}
-    onChange={(e) => setAudience(e.target.value)}
-    className="w-full border border-[#ddd6cc] bg-white px-3 py-2 text-sm outline-none"
-  >
-    <option value="all">全員向け</option>
-    <option value="men">男性向け</option>
-    <option value="women">女性向け</option>
-  </select>
-</div>
+            <select
+              value={audience}
+              onChange={(e) => setAudience(e.target.value)}
+              className="w-full border border-[#ddd6cc] bg-white px-3 py-2 text-sm outline-none"
+            >
+              <option value="all">全員向け</option>
+              <option value="men">男性向け</option>
+              <option value="women">女性向け</option>
+            </select>
+          </div>
           <div>
             <label className="mb-1 block text-xs text-[#8e8a84]">
               Category
