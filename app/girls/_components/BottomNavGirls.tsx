@@ -7,37 +7,37 @@ export default function BottomNavGirls() {
   const pathname = usePathname();
 
   function isActive(path: string) {
-  if (path === "/girls") {
-    return pathname === "/girls";
-  }
+    if (path === "/") {
+      return pathname === "/";
+    }
 
-  return pathname.startsWith(path);
-}
+    return pathname.startsWith(path);
+  }
 
   const items = [
     {
       label: "💜",
       text: "ホーム",
-      href: "/girls",
-      path: "/girls",
+      href: "/",
+      path: "/",
     },
     {
       label: "💼",
       text: "求人",
-      href: "/girls/jobs",
-      path: "/girls/jobs",
+      href: "/jobs",
+      path: "/jobs",
     },
     {
       label: "❓",
       text: "Q&A",
-      href: "/girls/qna",
-      path: "/girls/qna",
+      href: "/qna",
+      path: "/qna",
     },
     {
       label: "📝",
       text: "記事",
-      href: "/girls/blog",
-      path: "/girls/blog",
+      href: "/blog",
+      path: "/blog",
     },
     {
       label: "👤",
@@ -46,9 +46,6 @@ export default function BottomNavGirls() {
       path: "/feed",
     },
   ];
-
-
-
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-[#242134] bg-[#080710]">
@@ -61,9 +58,7 @@ export default function BottomNavGirls() {
               key={item.href}
               href={item.href}
               className={`text-xs ${
-                active
-                  ? "text-purple-300"
-                  : "text-[#a9a0bb]"
+                active ? "text-purple-300" : "text-[#a9a0bb]"
               }`}
             >
               <div className="text-lg">{item.label}</div>
