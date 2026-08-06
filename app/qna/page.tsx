@@ -245,7 +245,6 @@ export default async function QnaPage({
   return (
     <main className="-mb-24 min-h-dvh bg-[#fff3f8] pb-32 text-[#5f4d5c]">
       <div className="mx-auto w-[92%] max-w-5xl py-8">
-        <div className="mb-3 text-[12px] font-medium text-pink-400">💜 Oyasumi Girls</div>
         <h1 className="mb-4 text-[24px] font-semibold text-[#4f3a4f]">女の子向けQ&A</h1>
         <p className="mb-6 text-[12px] leading-6 text-[#9b7892]">
           お店選び・働き方・給与・安全など、シドニーで働く女の子同士で質問できます。
