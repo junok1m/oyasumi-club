@@ -1,22 +1,22 @@
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import BottomNavGirls from "@/app/girls/_components/BottomNavGirls";
 import { industryLabel, industryStyle } from "@/lib/industry-style";
 import SearchBar from "@/components/SearchBar";
-import LineLoginButton from "@/components/LineLoginButton";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export const metadata: Metadata = {
-  title: "おやすみクラブ | シドニーで働く女の子の居場所",
+  title: "おやすみクラブ | シドニーで働く女の子の情報交換所",
   description:
-    "おやすみクラブは、シドニーで働く女の子のための求人・Q&A・口コミ・ノウハウをまとめたサイトです。",
+    "シドニーで働く女の子のためのQ&A・求人・口コミ・ノウハウ。ひとりで抱え込まず、先輩のリアルな話を見ていってね。",
   alternates: {
     canonical: "https://www.oyasumi-club.com",
   },
 };
+
+const LINE_URL = "https://line.me/R/ti/p/@460vwxuh";
 
 function prettySlug(post: { id: number; slug: string | null }) {
   return post.slug ? `${post.id}-${post.slug}` : `${post.id}`;
@@ -31,420 +31,350 @@ function formatDate(dateString?: string | null) {
 }
 
 export default async function HomePage() {
-  const { data: qnaPosts } = await supabase
-    .from("board_posts")
-    .select("id, title, excerpt, body, category, slug, views, created_at, comments(count)")
-    .eq("status", "approved")
-    .eq("category", "qa")
-    .order("created_at", { ascending: false })
-    .limit(4);
-
-  const { data: tipsPosts } = await supabase
-    .from("board_posts")
-    .select("id, title, excerpt, body, category, slug, views, created_at, thumbnail_url, thumbnail_small_url")
-    .eq("status", "approved")
-    .eq("category", "blog")
-    .order("created_at", { ascending: false })
-    .limit(4);
-
-  const { data: jobs } = await supabase
-    .from("board_posts")
-    .select(`
-      id,
-      title,
-      slug,
-      views,
-      location,
-      industry,
-      thumbnail_small_url,
-      created_at
-    `)
-    .eq("status", "approved")
-    .eq("category", "jobs")
-    .order("created_at", { ascending: false })
-    .limit(4);
-
-  const { data: reviews } = await supabase
-    .from("board_posts")
-    .select("id, title, slug, views, location, industry, created_at")
-    .eq("status", "approved")
-    .eq("category", "review")
-    .order("created_at", { ascending: false })
-    .limit(3);
+  const [
+    { data: qnaPosts },
+    { data: tipsPosts },
+    { data: jobs },
+    { data: reviews },
+    { count: qnaCount },
+    { count: jobsCount },
+    { count: reviewsCount },
+    { count: blogCount },
+  ] = await Promise.all([
+    supabase
+      .from("board_posts")
+      .select("id, title, slug, created_at, comments(count)")
+      .eq("status", "approved")
+      .eq("category", "qa")
+      .order("created_at", { ascending: false })
+      .limit(5),
+    supabase
+      .from("board_posts")
+      .select(
+        "id, title, excerpt, slug, created_at, thumbnail_url, thumbnail_small_url"
+      )
+      .eq("status", "approved")
+      .eq("category", "blog")
+      .order("created_at", { ascending: false })
+      .limit(4),
+    supabase
+      .from("board_posts")
+      .select("id, title, slug, location, industry, created_at")
+      .eq("status", "approved")
+      .eq("category", "jobs")
+      .order("created_at", { ascending: false })
+      .limit(5),
+    supabase
+      .from("board_posts")
+      .select("id, title, slug, location, industry, created_at")
+      .eq("status", "approved")
+      .eq("category", "review")
+      .order("created_at", { ascending: false })
+      .limit(5),
+    supabase
+      .from("board_posts")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "approved")
+      .eq("category", "qa"),
+    supabase
+      .from("board_posts")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "approved")
+      .eq("category", "jobs"),
+    supabase
+      .from("board_posts")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "approved")
+      .eq("category", "review"),
+    supabase
+      .from("board_posts")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "approved")
+      .eq("category", "blog"),
+  ]);
 
   return (
-    <main className="-mb-24 min-h-dvh bg-[#fff4f8] pb-32 text-[#4f3a4f]">
-      <section className="relative overflow-hidden px-5 pb-12 pt-10">
-        <div className="absolute -right-16 top-10 h-44 w-44 rounded-full bg-pink-200/60 blur-3xl" />
-        <div className="absolute -left-16 top-52 h-44 w-44 rounded-full bg-purple-200/50 blur-3xl" />
+    <main className="min-h-dvh bg-[#fff7fa] text-[#4f3a4f]">
+      {/* Hero — compact */}
+      <section className="mx-auto w-[92%] max-w-5xl pt-8 pb-4">
+        <h1 className="text-[22px] font-bold leading-snug tracking-[-0.03em] md:text-[32px]">
+          ひとりで抱えなくていいよ。
+        </h1>
+        <p className="mt-2 text-[13px] leading-6 text-[#9b7892] md:text-sm">
+          シドニーで働く女の子の情報交換所。
+          <br className="md:hidden" />
+          先輩のリアルな話、見ていってね。
+        </p>
 
-        <div className="relative mx-auto max-w-5xl">
-          <h1 className="max-w-3xl text-[24px] font-bold leading-[1.2] tracking-[-0.04em] md:text-6xl">
-            シドニーで働く女の子の、
-            <br />
-            <span className="text-pink-400">もうひとつの居場所。</span>
-          </h1>
-
-          <p className="mt-6 max-w-xl text-sm leading-7 text-[#9b7892] md:text-base">
-            求人・Q&A・口コミ・ノウハウを、
-            <br className="hidden md:block" />
-            女の子目線でまとめました。
-          </p>
-
-          <div className="my-6">
-            <SearchBar
-              audience="girls"
-              placeholder="求人・Q&A・記事を検索..."
-            />
-          </div>
-
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link
-              href="/jobs"
-              className="rounded-full bg-[#4f3a4f] px-6 py-3 text-sm font-bold text-white shadow-sm"
-            >
-              💼 求人を見る
-            </Link>
-
-            <Link
-              href="/board/write?category=qa"
-              className="rounded-full border border-pink-200 bg-white/80 px-6 py-3 text-sm font-bold text-[#4f3a4f]"
-            >
-              💬 質問する
-            </Link>
-          </div>
+        <div className="mt-5">
+          <SearchBar audience="girls" placeholder="求人・Q&A・口コミを検索..." />
         </div>
-      </section>
 
-      <section className="mx-auto grid w-[92%] max-w-5xl grid-cols-4 gap-3">
-        {[
-          ["47", "口コミ", "/reviews", "働きやすさ"],
-          ["88", "Q&A", "/qna", "相談・質問"],
-          ["25", "求人", "/jobs", "募集中"],
-          ["12", "記事", "/blog", "ノウハウ"],
-        ].map(([num, label, href, sub]) => (
+        <div className="mt-5 flex gap-2">
           <Link
-            key={label}
-            href={href}
-            className="rounded-3xl border border-pink-100 bg-white/80 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            href="/jobs"
+            className="rounded-full bg-[#4f3a4f] px-5 py-2.5 text-sm font-bold text-white"
           >
-            <div className="text-3xl font-bold text-pink-400">{num}</div>
-            <div className="mt-1 font-bold">{label}</div>
-            <div className="mt-1 text-xs text-[#b28aa8]">{sub}</div>
+            求人を見る
           </Link>
-        ))}
-      </section>
-
-      <section className="mx-auto mt-10 w-[92%] max-w-5xl">
-        <div className="mb-5 flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold text-pink-400">MENU</p>
-            <h2 className="mt-1 text-2xl font-bold">なにを探す？</h2>
-          </div>
+          <Link
+            href="/board/write?category=qa"
+            className="rounded-full border border-pink-200 bg-white px-5 py-2.5 text-sm font-bold text-[#4f3a4f]"
+          >
+            質問する
+          </Link>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        {/* Quick links — not fake stat cards */}
+        <div className="mt-6 flex gap-2 overflow-x-auto pb-1 text-[13px]">
           {[
-            {
-              emoji: "💬",
-              title: "お店の口コミ",
-              desc: "働きやすさ・雰囲気・客層のリアルな声",
-              badge: "誰でも閲覧OK",
-              href: "/reviews",
-              bg: "bg-[#fff0f6]",
-            },
-            {
-              emoji: "💼",
-              title: "求人情報",
-              desc: "シドニーで募集中のお店をチェック",
-              badge: "応募OK",
-              href: "/jobs",
-              bg: "bg-[#fff7e8]",
-            },
-            {
-              emoji: "🙋‍♀️",
-              title: "Q&A 掲示板",
-              desc: "働く前の不安や疑問を匿名で相談",
-              badge: "投稿は要登録",
-              href: "/qna",
-              bg: "bg-[#f5f0ff]",
-            },
-            {
-              emoji: "📖",
-              title: "ノウハウ記事",
-              desc: "ビザ・安全・稼ぎ方・はじめかた",
-              badge: "無料で読める",
-              href: "/blog",
-              bg: "bg-[#ecfbf7]",
-            },
+            { label: "Q&A", href: "/qna", count: qnaCount },
+            { label: "求人", href: "/jobs", count: jobsCount },
+            { label: "口コミ", href: "/reviews", count: reviewsCount },
+            { label: "記事", href: "/blog", count: blogCount },
           ].map((item) => (
             <Link
-              key={item.title}
+              key={item.href}
               href={item.href}
-              className={`group rounded-[30px] border border-white/80 ${item.bg} p-7 shadow-sm transition hover:-translate-y-1 hover:shadow-md`}
+              className="shrink-0 rounded-full border border-pink-100 bg-white px-4 py-2 font-medium text-[#4f3a4f]"
             >
-              <div className="flex items-start justify-between">
-                <div className="text-4xl">{item.emoji}</div>
-                <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-bold text-[#9b7892]">
-                  {item.badge}
-                </span>
-              </div>
-
-              <h3 className="mt-8 text-2xl font-bold text-[#4f3a4f]">
-                {item.title}
-              </h3>
-
-              <p className="mt-3 text-sm leading-6 text-[#8f6f89]">
-                {item.desc}
-              </p>
-
-              <div className="mt-6 text-sm font-bold text-pink-500">
-                詳しく見る →
-              </div>
+              {item.label}
+              {typeof item.count === "number" && item.count > 0 && (
+                <span className="ml-1.5 text-[#b28aa8]">{item.count}</span>
+              )}
             </Link>
           ))}
         </div>
       </section>
 
-      {/* Q&A */}
-      <section className="mx-auto mt-14 w-[92%] max-w-5xl">
-        <div className="mb-5 flex items-end justify-between">
+      {/* Q&A first */}
+      <section className="mx-auto mt-8 w-[92%] max-w-5xl">
+        <div className="mb-3 flex items-end justify-between">
           <div>
-            <p className="text-xs font-bold text-pink-400">RECENT QUESTIONS</p>
-            <h2 className="mt-1 text-2xl font-bold">最近のQ&A</h2>
+            <p className="text-[11px] font-bold text-pink-400">みんなの相談</p>
+            <h2 className="text-lg font-bold">最近のQ&A</h2>
           </div>
-
-          <Link href="/qna" className="text-sm font-bold text-pink-500">
+          <Link href="/qna" className="text-[13px] font-bold text-pink-500">
             もっと見る →
           </Link>
         </div>
 
-        <div className="divide-y divide-pink-100">
-          {(qnaPosts ?? []).map((post) => {
-            const replies = post.comments?.[0]?.count ?? 0;
-
-            return (
-              <Link
-                key={post.id}
-                href={`/qna/${prettySlug(post)}#comments`}
-                className="group block py-4 transition hover:bg-pink-50/60"
-              >
-                <div className="min-w-0">
-                  <div className="flex items-center gap-3 text-xs">
-                    <span className="font-semibold text-pink-500">
-                      {replies}件の回答
-                    </span>
-                  </div>
-
-                  <div className="mt-2 flex items-center justify-between gap-4">
-                    <h3 className="truncate font-semibold text-[#4f3a4f] group-hover:text-pink-500">
+        <div className="rounded-2xl border border-pink-100 bg-white">
+          {(qnaPosts ?? []).length === 0 ? (
+            <p className="px-4 py-8 text-center text-sm text-[#9b7892]">
+              まだ質問がありません。最初の質問を書いてみてね。
+            </p>
+          ) : (
+            <div className="divide-y divide-pink-50">
+              {(qnaPosts ?? []).map((post) => {
+                const replies = post.comments?.[0]?.count ?? 0;
+                return (
+                  <Link
+                    key={post.id}
+                    href={`/qna/${prettySlug(post)}#comments`}
+                    className="block px-4 py-3.5 transition hover:bg-pink-50/50"
+                  >
+                    <div className="flex items-center gap-2 text-[11px] text-pink-500">
+                      <span className="font-semibold">{replies}件の回答</span>
+                      <span className="text-[#c4a8bc]">·</span>
+                      <span className="text-[#b3a3b1]">
+                        {formatDate(post.created_at)}
+                      </span>
+                    </div>
+                    <h3 className="mt-1 line-clamp-2 text-[14px] font-semibold leading-5 text-[#4f3a4f]">
                       {post.title}
                     </h3>
-
-                    <span className="shrink-0 text-xs text-[#b3a3b1]">
-                      {formatDate(post.created_at)}
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* JOBS */}
-      <section className="mx-auto mt-14 w-[92%] max-w-5xl">
-        <div className="mb-5 flex items-end justify-between">
-          <div>
-            <p className="text-xs font-bold text-pink-400">HIRING NOW</p>
-            <h2 className="mt-1 text-2xl font-bold">新着求人</h2>
-          </div>
-
-          <Link href="/jobs" className="text-sm font-bold text-pink-500">
-            もっと見る →
-          </Link>
-        </div>
-
-        <div className="divide-y divide-pink-100">
-          {(jobs ?? []).map((job) => (
-            <Link
-              key={job.id}
-              href={`/jobs/${prettySlug(job)}`}
-              className="group block py-4 transition hover:bg-pink-50/60"
-            >
-              <div className="min-w-0">
-                <div className="flex items-center gap-3 text-xs">
-                  {job.industry && (
-                    <span className={industryStyle(job.industry)}>
-                      {industryLabel(job.industry)}
-                    </span>
-                  )}
-
-                  {job.location && (
-                    <span className="text-[#9b7892]">📍 {job.location}</span>
-                  )}
-                </div>
-
-                <div className="mt-2 flex items-center justify-between gap-4">
-                  <h3 className="truncate font-semibold text-[#4f3a4f] group-hover:text-pink-500">
-                    {job.title}
-                  </h3>
-
-                  <span className="shrink-0 text-xs text-[#b3a3b1]">
-                    {formatDate(job.created_at)}
-                  </span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* REVIEWS */}
-      <section className="mx-auto mt-14 w-[92%] max-w-5xl">
-        <div className="mb-5 flex items-end justify-between">
-          <div>
-            <p className="text-xs font-bold text-pink-400">SHOP REVIEWS</p>
-            <h2 className="mt-1 text-2xl font-bold">お店の口コミ</h2>
-          </div>
-
-          <Link href="/reviews" className="text-sm font-bold text-pink-500">
-            もっと見る →
-          </Link>
-        </div>
-
-        <div className="divide-y divide-pink-100">
-          {(reviews ?? []).map((review) => (
-            <Link
-              key={review.id}
-              href={`/reviews/${prettySlug(review)}`}
-              className="group block py-4 transition hover:bg-pink-50/60"
-            >
-              <div className="min-w-0">
-                <div className="flex items-center gap-3 text-xs">
-                  {review.industry && (
-                    <span className={industryStyle(review.industry)}>
-                      {industryLabel(review.industry)}
-                    </span>
-                  )}
-
-                  {review.location && (
-                    <span className="text-[#9b7892]">📍 {review.location}</span>
-                  )}
-                </div>
-
-                <div className="mt-2 flex items-center justify-between gap-4">
-                  <h3 className="truncate font-semibold text-[#4f3a4f] group-hover:text-pink-500">
-                    {review.title}
-                  </h3>
-
-                  <span className="shrink-0 text-xs text-[#b3a3b1]">
-                    {formatDate(review.created_at)}
-                  </span>
-                </div>
-              </div>
-            </Link>
-          ))}
-
-          {(!reviews || reviews.length === 0) && (
-            <div className="py-4 text-sm text-[#9b7892]">
-              まだ口コミがありません。
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>
       </section>
 
-      {/* BLOG / TIPS */}
-      <section className="mx-auto mt-14 w-[92%] max-w-5xl">
-        <div className="mb-5 flex items-end justify-between">
-          <div>
-            <p className="text-xs font-bold text-pink-400">COLUMN</p>
-            <h2 className="mt-1 text-2xl font-bold">ノウハウ記事</h2>
-          </div>
+      {/* Safety mid-page */}
+      <section className="mx-auto mt-8 w-[92%] max-w-5xl">
+        <div className="rounded-2xl border border-pink-100 bg-[#fff0f5] px-5 py-4">
+          <p className="text-[12px] font-bold text-pink-500">安全のために</p>
+          <p className="mt-1.5 text-[13px] leading-6 text-[#8f6f89]">
+            契約前に仕事内容・給与・ルールは必ず確認してね。
+            困ったときは一人で抱え込まず、すぐ相談してOK。
+          </p>
+          <Link
+            href="/blog"
+            className="mt-2 inline-block text-[12px] font-bold text-pink-500"
+          >
+            安全の話をもっと見る →
+          </Link>
+        </div>
+      </section>
 
-          <Link href="/blog" className="text-sm font-bold text-pink-500">
+      {/* Jobs */}
+      <section className="mx-auto mt-10 w-[92%] max-w-5xl">
+        <div className="mb-3 flex items-end justify-between">
+          <div>
+            <p className="text-[11px] font-bold text-pink-400">HIRING</p>
+            <h2 className="text-lg font-bold">新着求人</h2>
+          </div>
+          <Link href="/jobs" className="text-[13px] font-bold text-pink-500">
             もっと見る →
           </Link>
         </div>
 
-        <div className="-mx-4 overflow-x-auto px-4 pb-2">
-          <div className="flex gap-4">
-            {(tipsPosts ?? []).map((post) => (
-              <Link
-                key={post.id}
-                href={`/blog/${prettySlug(post)}`}
-                className="w-[240px] shrink-0 overflow-hidden rounded-3xl border border-pink-100 bg-white/80 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-              >
-                {(post.thumbnail_small_url || post.thumbnail_url) && (
-                  <img
-                    src={post.thumbnail_small_url || post.thumbnail_url || ""}
-                    alt=""
-                    className="aspect-[16/9] w-full object-cover"
-                  />
-                )}
-
-                <div className="p-5">
-                  <h3 className="mt-4 line-clamp-2 text-base font-bold leading-6">
-                    {post.title}
+        <div className="rounded-2xl border border-pink-100 bg-white">
+          {(jobs ?? []).length === 0 ? (
+            <p className="px-4 py-8 text-center text-sm text-[#9b7892]">
+              まだ求人がありません。
+            </p>
+          ) : (
+            <div className="divide-y divide-pink-50">
+              {(jobs ?? []).map((job) => (
+                <Link
+                  key={job.id}
+                  href={`/jobs/${prettySlug(job)}`}
+                  className="block px-4 py-3.5 transition hover:bg-pink-50/50"
+                >
+                  <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                    {job.industry && (
+                      <span className={industryStyle(job.industry)}>
+                        {industryLabel(job.industry)}
+                      </span>
+                    )}
+                    {job.location && (
+                      <span className="text-[#9b7892]">📍 {job.location}</span>
+                    )}
+                    <span className="text-[#b3a3b1]">
+                      {formatDate(job.created_at)}
+                    </span>
+                  </div>
+                  <h3 className="mt-1 line-clamp-2 text-[14px] font-semibold leading-5 text-[#4f3a4f]">
+                    {job.title}
                   </h3>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
 
-                  <p className="mt-3 line-clamp-2 text-xs leading-5 text-[#9b7892]">
-                    {post.excerpt || "excerptも追加してください。"}
-                  </p>
-                </div>
-              </Link>
-            ))}
+      {/* Reviews */}
+      <section className="mx-auto mt-10 w-[92%] max-w-5xl">
+        <div className="mb-3 flex items-end justify-between">
+          <div>
+            <p className="text-[11px] font-bold text-pink-400">REAL VOICE</p>
+            <h2 className="text-lg font-bold">お店の口コミ</h2>
           </div>
-        </div>
-      </section>
-
-      <section className="mx-auto mt-14 w-[92%] max-w-5xl">
-        <div className="rounded-[2rem] border border-pink-100 bg-white/80 p-8 shadow-sm">
-          <p className="text-xs font-bold text-pink-400">SAFETY NOTE</p>
-          <h2 className="mt-2 text-2xl font-bold">安全に働くために</h2>
-
-          <ul className="mt-6 space-y-3 text-sm leading-7 text-[#8f6f89]">
-            <li>・契約前に仕事内容、給与、ルールを必ず確認する。</li>
-            <li>・学生ビザの就労制限に注意する。</li>
-            <li>・給与や税務申告は自己管理が必要。</li>
-            <li>・困ったときは一人で抱え込まず、すぐ相談する。</li>
-          </ul>
-
-          <Link
-            href="/blog"
-            className="mt-6 inline-block text-sm font-bold text-pink-500"
-          >
-            → 安全情報をもっと見る
+          <Link href="/reviews" className="text-[13px] font-bold text-pink-500">
+            もっと見る →
           </Link>
         </div>
-      </section>
 
-      <section className="mx-auto mt-14 w-[92%] max-w-5xl rounded-[2rem] bg-[#4f3a4f] p-9 text-center text-white shadow-sm">
-        <p className="text-sm text-pink-200">JOIN OYASUMI GIRLS</p>
-
-        <h2 className="mt-3 text-3xl font-bold leading-snug">
-          無料で登録して
-          <br />
-          口コミや質問を投稿しよう
-        </h2>
-
-        <p className="mt-5 text-sm leading-7 text-pink-100">
-          匿名OK。求人への応募やQ&A参加もできます。
-        </p>
-
-        <div className="mx-auto mt-8 max-w-md space-y-3">
-          <LineLoginButton />
-
-          <Link
-            href="/login"
-            className="block rounded-full border border-white/20 py-4 text-sm font-bold text-white"
-          >
-            メールアドレスで登録
-          </Link>
+        <div className="rounded-2xl border border-pink-100 bg-white">
+          {(reviews ?? []).length === 0 ? (
+            <p className="px-4 py-8 text-center text-sm text-[#9b7892]">
+              まだ口コミがありません。
+            </p>
+          ) : (
+            <div className="divide-y divide-pink-50">
+              {(reviews ?? []).map((review) => (
+                <Link
+                  key={review.id}
+                  href={`/reviews/${prettySlug(review)}`}
+                  className="block px-4 py-3.5 transition hover:bg-pink-50/50"
+                >
+                  <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                    {review.industry && (
+                      <span className={industryStyle(review.industry)}>
+                        {industryLabel(review.industry)}
+                      </span>
+                    )}
+                    {review.location && (
+                      <span className="text-[#9b7892]">📍 {review.location}</span>
+                    )}
+                    <span className="text-[#b3a3b1]">
+                      {formatDate(review.created_at)}
+                    </span>
+                  </div>
+                  <h3 className="mt-1 line-clamp-2 text-[14px] font-semibold leading-5 text-[#4f3a4f]">
+                    {review.title}
+                  </h3>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
-      <BottomNavGirls />
+      {/* Blog */}
+      <section className="mx-auto mt-10 w-[92%] max-w-5xl">
+        <div className="mb-3 flex items-end justify-between">
+          <div>
+            <p className="text-[11px] font-bold text-pink-400">COLUMN</p>
+            <h2 className="text-lg font-bold">ノウハウ記事</h2>
+          </div>
+          <Link href="/blog" className="text-[13px] font-bold text-pink-500">
+            もっと見る →
+          </Link>
+        </div>
+
+        <div className="space-y-3">
+          {(tipsPosts ?? []).map((post) => (
+            <Link
+              key={post.id}
+              href={`/blog/${prettySlug(post)}`}
+              className="flex gap-3 rounded-2xl border border-pink-100 bg-white p-3 transition hover:bg-pink-50/40"
+            >
+              {(post.thumbnail_small_url || post.thumbnail_url) && (
+                <img
+                  src={post.thumbnail_small_url || post.thumbnail_url || ""}
+                  alt=""
+                  className="h-16 w-16 shrink-0 rounded-xl object-cover"
+                />
+              )}
+              <div className="min-w-0 flex-1">
+                <h3 className="line-clamp-2 text-[14px] font-semibold leading-5">
+                  {post.title}
+                </h3>
+                {post.excerpt && (
+                  <p className="mt-1 line-clamp-2 text-[12px] leading-5 text-[#9b7892]">
+                    {post.excerpt}
+                  </p>
+                )}
+              </div>
+            </Link>
+          ))}
+          {(tipsPosts ?? []).length === 0 && (
+            <p className="py-8 text-center text-sm text-[#9b7892]">
+              まだ記事がありません。
+            </p>
+          )}
+        </div>
+      </section>
+
+      {/* LINE CTA — no signup push */}
+      <section className="mx-auto mt-12 mb-8 w-[92%] max-w-5xl">
+        <div className="rounded-2xl border border-pink-100 bg-white px-6 py-8 text-center">
+          <p className="text-[12px] font-bold text-pink-400">運営に相談</p>
+          <h2 className="mt-2 text-[20px] font-bold leading-snug">
+            わからないこと、
+            <br />
+            聞いてみてね。
+          </h2>
+          <p className="mx-auto mt-3 max-w-sm text-[13px] leading-6 text-[#9b7892]">
+            おやすみクラブの運営に、LINEで直接メッセージできます。
+            気軽にどうぞ。
+          </p>
+          <a
+            href={LINE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-[#06C755] px-8 py-3.5 text-sm font-bold text-white"
+          >
+            <img src="/line.png" alt="" className="h-5 w-5" />
+            LINEで相談する
+          </a>
+        </div>
+      </section>
     </main>
   );
 }
