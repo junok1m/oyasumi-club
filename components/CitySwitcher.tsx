@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { CITIES } from "@/lib/cities";
+import { AU_CITIES, NZ_CITIES, CITIES } from "@/lib/cities";
 
 export default function CitySwitcher() {
   const pathname = usePathname();
@@ -14,9 +14,7 @@ export default function CitySwitcher() {
     (c) => pathname === `/${c.value}` || pathname.startsWith(`/${c.value}/`)
   );
 
-  const label = currentCity
-    ? `${currentCity.labelJa}`
-    : "Australia";
+  const label = currentCity ? currentCity.labelJa : "Australia";
 
   useEffect(() => {
     function onPointerDown(e: MouseEvent) {
@@ -31,6 +29,14 @@ export default function CitySwitcher() {
   function go(href: string) {
     setOpen(false);
     router.push(href);
+  }
+
+  function rowClass(active: boolean) {
+    return `flex w-full items-center justify-between px-4 py-2.5 text-left text-[13px] ${
+      active
+        ? "bg-[#1c1828] font-semibold text-pink-300"
+        : "text-[#e8dff3] hover:bg-[#1c1828]"
+    }`;
   }
 
   return (
@@ -52,26 +58,23 @@ export default function CitySwitcher() {
       {open && (
         <div
           role="listbox"
-          className="absolute right-0 z-50 mt-2 min-w-[180px] overflow-hidden rounded-xl border border-[#3a3348] bg-[#12101a] py-1 shadow-xl"
+          className="absolute right-0 z-50 mt-2 max-h-[70vh] min-w-[200px] overflow-y-auto rounded-xl border border-[#3a3348] bg-[#12101a] py-1 shadow-xl"
         >
           <button
             type="button"
             role="option"
             aria-selected={!currentCity}
             onClick={() => go("/")}
-            className={`flex w-full items-center justify-between px-4 py-2.5 text-left text-[13px] ${
-              !currentCity
-                ? "bg-[#1c1828] font-semibold text-pink-300"
-                : "text-[#e8dff3] hover:bg-[#1c1828]"
-            }`}
+            className={rowClass(!currentCity)}
           >
             <span>Australia</span>
             <span className="text-[11px] text-[#a9a0bb]">全国</span>
           </button>
 
-          <div className="my-1 border-t border-[#2a2438]" />
-
-          {CITIES.map((city) => {
+          <div className="px-4 pb-1 pt-2 text-[10px] font-bold uppercase tracking-wide text-[#7a728c]">
+            Australia
+          </div>
+          {AU_CITIES.map((city) => {
             const active = currentCity?.value === city.value;
             return (
               <button
@@ -80,11 +83,29 @@ export default function CitySwitcher() {
                 role="option"
                 aria-selected={active}
                 onClick={() => go(`/${city.value}`)}
-                className={`flex w-full items-center justify-between px-4 py-2.5 text-left text-[13px] ${
-                  active
-                    ? "bg-[#1c1828] font-semibold text-pink-300"
-                    : "text-[#e8dff3] hover:bg-[#1c1828]"
-                }`}
+                className={rowClass(active)}
+              >
+                <span>{city.labelJa}</span>
+                <span className="text-[11px] text-[#a9a0bb]">{city.label}</span>
+              </button>
+            );
+          })}
+
+          <div className="my-1 border-t border-[#2a2438]" />
+
+          <div className="px-4 pb-1 pt-2 text-[10px] font-bold uppercase tracking-wide text-[#7a728c]">
+            New Zealand
+          </div>
+          {NZ_CITIES.map((city) => {
+            const active = currentCity?.value === city.value;
+            return (
+              <button
+                key={city.value}
+                type="button"
+                role="option"
+                aria-selected={active}
+                onClick={() => go(`/${city.value}`)}
+                className={rowClass(active)}
               >
                 <span>{city.labelJa}</span>
                 <span className="text-[11px] text-[#a9a0bb]">{city.label}</span>
