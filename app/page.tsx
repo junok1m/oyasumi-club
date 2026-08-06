@@ -157,7 +157,7 @@ export default async function HomePage() {
       </section>
 
       <section className="mx-auto mt-6 w-[92%] max-w-5xl">
-        <div className="mb-4 flex items-end justify-between">
+        <div className="mb-8 flex items-end justify-between">
           <h2 className="text-[20px] font-bold tracking-tight text-[#4f3a4f]">
             最近のQ&A
           </h2>
@@ -223,7 +223,7 @@ export default async function HomePage() {
 
       <section className="mt-10 bg-[#fff0f6]/60 py-8">
         <div className="mx-auto w-[92%] max-w-5xl">
-          <div className="mb-4 flex items-end justify-between">
+          <div className="mb-8 flex items-end justify-between">
             <h2 className="text-[20px] font-bold tracking-tight text-[#4f3a4f]">
               新着求人
             </h2>
@@ -269,7 +269,7 @@ export default async function HomePage() {
       </section>
 
       <section className="mx-auto mt-10 w-[92%] max-w-5xl">
-        <div className="mb-4 flex items-end justify-between">
+        <div className="mb-8 flex items-end justify-between">
           <h2 className="text-[20px] font-bold tracking-tight text-[#4f3a4f]">
             お店の口コミ
           </h2>
@@ -316,7 +316,7 @@ export default async function HomePage() {
       </section>
 
       <section className="mx-auto mt-10 w-[92%] max-w-5xl">
-        <div className="mb-4 flex items-end justify-between">
+        <div className="mb-8 flex items-end justify-between">
           <h2 className="text-[20px] font-bold tracking-tight text-[#4f3a4f]">
             ノウハウ記事
           </h2>
