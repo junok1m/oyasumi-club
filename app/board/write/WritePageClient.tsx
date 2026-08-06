@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { getMyProfile } from "@/lib/auth";
 import RichTextEditor from "@/components/RichTextEditor";
-import { CITIES, isCityRequiredCategory } from "@/lib/cities";
+import { AU_CITIES, CITIES, NZ_CITIES, isCityRequiredCategory } from "@/lib/cities";
 
 type MessageType = "error" | "success";
 
@@ -24,7 +24,7 @@ export default function WritePageClient() {
   const [role, setRole] = useState<string | null>(null);
   const [category, setCategory] = useState("news");
   const [industry, setIndustry] = useState("");
-  const [city, setCity] = useState("sydney");
+  const [city, setCity] = useState("");
   const [title, setTitle] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
@@ -365,7 +365,7 @@ export default function WritePageClient() {
     if (isCityRequiredCategory(category) && !city) {
       setMessage({
         type: "error",
-        text: "求人・Q&A・口コミには都市を選択してください。",
+        text: "求人・口コミには都市を選択してください。",
       });
       return;
     }
@@ -441,9 +441,7 @@ export default function WritePageClient() {
         finalThumbnailSmallUrl = uploaded.thumbnailSmallUrl;
       }
 
-      const resolvedCity = isCityRequiredCategory(category)
-        ? city
-        : city || null;
+      const resolvedCity = city || null;
 
       const { data, error } = await supabase
         .from("board_posts")
@@ -589,16 +587,25 @@ export default function WritePageClient() {
             }}
             className="w-full border-b py-2 text-sm outline-none"
           >
-            {!showCityRequired && <option value="">指定なし（全国）</option>}
-            {CITIES.map((item) => (
-              <option key={item.value} value={item.value}>
-                {item.labelJa} / {item.label}
-              </option>
-            ))}
+            <option value="">指定なし（全国）</option>
+            <optgroup label="Australia">
+              {AU_CITIES.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.labelJa} / {item.label}
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label="New Zealand">
+              {NZ_CITIES.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.labelJa} / {item.label}
+                </option>
+              ))}
+            </optgroup>
           </select>
           <p className="mt-1 text-xs text-gray-400">
             {showCityRequired
-              ? "求人・Q&A・口コミは都市の選択が必要です。"
+              ? "求人・口コミは都市の選択が必要です。"
               : "任意です。未選択の場合は全国向けとして扱います。"}
           </p>
         </div>
