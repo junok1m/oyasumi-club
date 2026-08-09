@@ -245,10 +245,20 @@ export default async function QnaPage({
   return (
     <main className="-mb-24 min-h-dvh bg-[#fff3f8] pb-32 text-[#5f4d5c]">
       <div className="mx-auto w-[92%] max-w-5xl py-8">
-        <h1 className="mb-4 text-[24px] font-semibold text-[#4f3a4f]">女の子向けQ&A</h1>
-        <p className="mb-6 text-[12px] leading-6 text-[#9b7892]">
-          お店選び・働き方・給与・安全など、シドニーで働く女の子同士で質問できます。
-        </p>
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-[24px] font-semibold text-[#4f3a4f]">女の子向けQ&A</h1>
+            <p className="mt-2 text-[12px] leading-6 text-[#9b7892]">
+              お店選び・働き方・給与・安全など、女の子同士で質問できます。ログインなしでもOK。
+            </p>
+          </div>
+          <Link
+            href="/board/write/open?category=qa"
+            className="shrink-0 rounded-full bg-[#4f3a4f] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm"
+          >
+            質問する
+          </Link>
+        </div>
 
         <div className="space-y-6">
           <SearchBar q={q} category="qa" sort={sort} basePath="/qna" />
@@ -267,7 +277,13 @@ export default async function QnaPage({
 
         {data.results.length === 0 ? (
           <div className="rounded-3xl border border-pink-100 bg-white/70 px-6 py-20 text-center text-sm text-[#9b7892]">
-            まだ質問がありません。
+            <p>まだ質問がありません。</p>
+            <Link
+              href="/board/write/open?category=qa"
+              className="mt-4 inline-block rounded-full bg-[#4f3a4f] px-5 py-2.5 text-[13px] font-bold text-white"
+            >
+              最初の質問を書く
+            </Link>
           </div>
         ) : (
           <div className="divide-y divide-pink-100">
@@ -342,6 +358,17 @@ export default async function QnaPage({
           </div>
         )}
       </div>
+
+      {/* Mobile sticky ask button */}
+      <div className="fixed bottom-20 left-0 right-0 z-40 flex justify-center px-4 md:hidden">
+        <Link
+          href="/board/write/open?category=qa"
+          className="rounded-full bg-[#4f3a4f] px-6 py-3 text-sm font-bold text-white shadow-lg"
+        >
+          💬 質問する
+        </Link>
+      </div>
+
       <BottomNavGirls />
     </main>
   );
