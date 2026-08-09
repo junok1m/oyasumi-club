@@ -70,6 +70,9 @@ export default function CommentThread({
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingBody, setEditingBody] = useState("");
 
+  // Board Q&A/review: anonymous OK. Guide: still requires login (RLS).
+  const allowAnonymous = targetType === "board";
+
   const parentComments = comments.filter((comment) => comment.parent_id === null);
 
   function getReplies(parentId: number) {
@@ -124,7 +127,7 @@ export default function CommentThread({
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) {
+    if (!user && !allowAnonymous) {
       setMessage("ログインが必要です。");
       setPosting(false);
       return;
@@ -132,7 +135,7 @@ export default function CommentThread({
 
     const { error } = await supabase.from("comments").insert({
       [targetColumn]: targetId,
-      author_id: user.id,
+      author_id: user?.id ?? null,
       parent_id: null,
       body: text,
       is_anon: true,
@@ -165,14 +168,14 @@ export default function CommentThread({
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) {
+    if (!user && !allowAnonymous) {
       setMessage("ログインが必要です。");
       return;
     }
 
     const { error } = await supabase.from("comments").insert({
       [targetColumn]: targetId,
-      author_id: user.id,
+      author_id: user?.id ?? null,
       parent_id: parentId,
       body: text,
       is_anon: true,
@@ -249,6 +252,9 @@ export default function CommentThread({
   }
 
   function renderComment(comment: Comment, isReply = false) {
+    const isOwner =
+      !!currentUserId && comment.author_id === currentUserId;
+
     return (
       <div
         key={comment.id}
@@ -268,24 +274,23 @@ export default function CommentThread({
           <span className="text-[#c1b8ae]">·</span>
           <span>{formatCommentTime(comment.created_at)}</span>
 
-          {comment.status !== "deleted" &&
-            comment.author_id === currentUserId && (
-              <>
-                <span className="text-[#c1b8ae]">·</span>
+          {comment.status !== "deleted" && isOwner && (
+            <>
+              <span className="text-[#c1b8ae]">·</span>
 
-                <CommentActionButton
-                  variant="edit"
-                  onClick={() => {
-                    setEditingId(comment.id);
-                    setEditingBody(comment.body);
-                    setReplyToId(null);
-                    setMessage("");
-                  }}
-                >
-                  編集
-                </CommentActionButton>
-              </>
-            )}
+              <CommentActionButton
+                variant="edit"
+                onClick={() => {
+                  setEditingId(comment.id);
+                  setEditingBody(comment.body);
+                  setReplyToId(null);
+                  setMessage("");
+                }}
+              >
+                編集
+              </CommentActionButton>
+            </>
+          )}
         </div>
 
         {comment.status === "deleted" ? (
@@ -347,7 +352,7 @@ export default function CommentThread({
               </CommentActionButton>
             )}
 
-            {comment.author_id === currentUserId && (
+            {isOwner && (
               <CommentActionButton
                 variant="delete"
                 onClick={() => deleteComment(comment.id)}
@@ -413,9 +418,11 @@ export default function CommentThread({
           placeholder="匿名でコメントを書く..."
         />
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
           <p className="text-xs text-[#7d572a]">
-            コメントは匿名で表示されます。
+            {allowAnonymous
+              ? "ログインなしで投稿できます。表示名はランダムです。編集・削除はできません。"
+              : "コメントは匿名で表示されます。"}
           </p>
 
           <CommentActionButton
