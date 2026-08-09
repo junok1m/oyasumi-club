@@ -6,6 +6,13 @@ import { supabase } from "@/lib/supabase";
 import { getMyProfile } from "@/lib/auth";
 import RichTextEditor from "@/components/RichTextEditor";
 import { AU_CITIES, CITIES, NZ_CITIES, isCityRequiredCategory } from "@/lib/cities";
+import {
+  canWriteCategory,
+  categoryLabelJa,
+  getAllowedCategories,
+  requiresAuthToWrite,
+  statusForNewPost,
+} from "@/lib/permissions";
 
 type MessageType = "error" | "success";
 
@@ -22,7 +29,8 @@ export default function WritePageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [role, setRole] = useState<string | null>(null);
-  const [category, setCategory] = useState("news");
+  const [authReady, setAuthReady] = useState(false);
+  const [category, setCategory] = useState("qa");
   const [industry, setIndustry] = useState("");
   const [city, setCity] = useState("");
   const [title, setTitle] = useState("");
@@ -44,36 +52,6 @@ export default function WritePageClient() {
     return html.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim();
   }
 
-  function getAllowedCategories(role: string | null) {
-    switch (role) {
-      case "admin":
-        return ["news", "blog", "jobs", "promo", "qa", "review"];
-      case "shop":
-        return ["blog", "jobs", "promo"];
-      case "girl":
-        return ["blog", "qa", "review"];
-      default:
-        return [];
-    }
-  }
-  function categoryLabel(cat: string) {
-    switch (cat) {
-      case "news":
-        return "ニュース";
-      case "blog":
-        return "ブログ";
-      case "jobs":
-        return "求人";
-      case "promo":
-        return "プロモーション";
-      case "qa":
-        return "Q&A";
-      case "review":
-        return "口コミ";
-      default:
-        return cat;
-    }
-  }
   function getIndustries() {
     return [
       { value: "fuzoku", label: "風俗" },
@@ -84,6 +62,7 @@ export default function WritePageClient() {
       { value: "bar", label: "バー" },
     ];
   }
+
   function handleThumbnailFileChange(file: File | null) {
     setMessage(null);
 
@@ -220,7 +199,9 @@ export default function WritePageClient() {
 
     if (smallError) {
       await supabase.storage.from("board-images").remove([mainPath]);
-      throw new Error(smallError.message || "サムネイルのアップロードに失敗しました。");
+      throw new Error(
+        smallError.message || "サムネイルのアップロードに失敗しました。"
+      );
     }
 
     const { data: mainPublicUrl } = supabase.storage
@@ -262,24 +243,14 @@ export default function WritePageClient() {
       const profile = await getMyProfile();
 
       if (!profile) {
-        setMessage({
-          type: "error",
-          text: "ログイン後にご利用ください。",
-        });
-        router.push("/login");
+        // Anonymous: open boards only (qa / review)
+        setRole(null);
+        setAuthReady(true);
         return;
       }
 
       setRole(profile.role);
-
-      if (profile.role === "client") {
-        setMessage({
-          type: "error",
-          text: "クライアントは投稿できません。",
-        });
-        router.push("/board");
-        return;
-      }
+      setAuthReady(true);
 
       const {
         data: { user },
@@ -291,7 +262,7 @@ export default function WritePageClient() {
     }
 
     fetchMe();
-  }, [router]);
+  }, []);
 
   useEffect(() => {
     const categoryParam = searchParams.get("category");
@@ -318,12 +289,14 @@ export default function WritePageClient() {
   }, [thumbnailPreviewUrl]);
 
   useEffect(() => {
+    if (!authReady) return;
+
     const allowed = getAllowedCategories(role);
 
-    if (allowed.length > 0 && !allowed.includes(category)) {
+    if (allowed.length > 0 && !allowed.includes(category as never)) {
       setCategory(allowed[0]);
     }
-  }, [role, category]);
+  }, [role, category, authReady]);
 
   useEffect(() => {
     async function refreshJobCountIfNeeded() {
@@ -370,14 +343,27 @@ export default function WritePageClient() {
       return;
     }
 
-    const allowed = getAllowedCategories(role);
-
-    if (!allowed.includes(category)) {
+    if (!canWriteCategory(role, category)) {
       setMessage({
         type: "error",
         text: "このカテゴリには投稿できません。",
       });
       return;
+    }
+
+    if (requiresAuthToWrite(category)) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        setMessage({
+          type: "error",
+          text: "このカテゴリはログイン（店舗アカウント）が必要です。",
+        });
+        router.push("/login");
+        return;
+      }
     }
 
     setLoading(true);
@@ -389,16 +375,7 @@ export default function WritePageClient() {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (!user) {
-        setMessage({
-          type: "error",
-          text: "ログイン後にご利用ください。",
-        });
-        router.push("/login");
-        return;
-      }
-
-      if (category === "jobs") {
+      if (category === "jobs" && user) {
         const nowIso = new Date().toISOString();
 
         const { count, error: countError } = await supabase
@@ -435,6 +412,15 @@ export default function WritePageClient() {
       let finalThumbnailSmallUrl: string | null = null;
 
       if (thumbnailFile) {
+        if (!user) {
+          setMessage({
+            type: "error",
+            text: "画像付き投稿はログイン後にご利用ください。",
+          });
+          setLoading(false);
+          return;
+        }
+
         const uploaded = await uploadBoardImages(thumbnailFile, user.id);
         uploadedPaths = uploaded.paths;
         finalThumbnailUrl = uploaded.thumbnailUrl;
@@ -442,11 +428,12 @@ export default function WritePageClient() {
       }
 
       const resolvedCity = city || null;
+      const postStatus = statusForNewPost(role, category);
 
       const { data, error } = await supabase
         .from("board_posts")
         .insert({
-          author_id: user.id,
+          author_id: user?.id ?? null,
           like_boost: Math.floor(Math.random() * 8),
           category,
           audience: "all",
@@ -457,9 +444,9 @@ export default function WritePageClient() {
           body: body.trim(),
           thumbnail_url: finalThumbnailUrl,
           thumbnail_small_url: finalThumbnailSmallUrl,
-          status: role === "admin" ? "approved" : "pending",
+          status: postStatus,
         })
-        .select("id, slug")
+        .select("id, slug, category")
         .single();
 
       if (error) {
@@ -480,11 +467,27 @@ export default function WritePageClient() {
 
       setMessage({
         type: "success",
-        text: "投稿を作成しました。",
+        text:
+          postStatus === "approved"
+            ? "投稿しました。"
+            : "投稿を受け付けました。審査後に公開されます。",
       });
 
+      const prettySlug = data.slug ? `${data.id}-${data.slug}` : `${data.id}`;
+      const cat = data.category;
+
+      if (postStatus === "approved") {
+        if (cat === "qa") {
+          router.push(`/qna/${prettySlug}`);
+        } else if (cat === "review") {
+          router.push(`/reviews/${prettySlug}`);
+        } else {
+          router.push(`/board/${prettySlug}`);
+        }
+        return;
+      }
+
       if (role === "admin") {
-        const prettySlug = data.slug ? `${data.id}-${data.slug}` : `${data.id}`;
         router.push(`/board/${prettySlug}`);
         return;
       }
@@ -495,18 +498,16 @@ export default function WritePageClient() {
       setMessage({
         type: "error",
         text:
-          error instanceof Error
-            ? error.message
-            : "エラーが発生しました。",
+          error instanceof Error ? error.message : "エラーが発生しました。",
       });
     } finally {
       setLoading(false);
     }
   }
 
-  if (role === null) {
+  if (!authReady) {
     return (
-      <main className="w-[80%] mx-auto px-6 py-8">
+      <main className="mx-auto w-[80%] px-6 py-8">
         <p className="text-sm text-gray-500">Loading...</p>
       </main>
     );
@@ -514,10 +515,16 @@ export default function WritePageClient() {
 
   const allowedCategories = getAllowedCategories(role);
   const showCityRequired = isCityRequiredCategory(category);
+  const isAnonymous = role === null;
 
   return (
-    <main className="w-[80%] mx-auto px-6 py-8">
-      <h1 className="mb-8 text-2xl font-semibold">Write</h1>
+    <main className="mx-auto w-[80%] px-6 py-8">
+      <h1 className="mb-2 text-2xl font-semibold">投稿する</h1>
+      {isAnonymous && (
+        <p className="mb-6 text-sm text-gray-500">
+          Q&A・口コミはログインなしで投稿できます。求人は店舗アカウントが必要です。
+        </p>
+      )}
 
       {message && (
         <div
@@ -544,7 +551,7 @@ export default function WritePageClient() {
           >
             {allowedCategories.map((cat) => (
               <option key={cat} value={cat}>
-                {categoryLabel(cat)}
+                {categoryLabelJa(cat)}
               </option>
             ))}
           </select>
@@ -556,24 +563,26 @@ export default function WritePageClient() {
           )}
         </div>
 
-        <div>
-          <label className="mb-1 block text-xs text-gray-500">Industry</label>
-          <select
-            value={industry}
-            onChange={(e) => {
-              setIndustry(e.target.value);
-              setMessage(null);
-            }}
-            className="w-full border-b py-2 text-sm outline-none"
-          >
-            <option value="">業種を選択</option>
-            {getIndustries().map((item) => (
-              <option key={item.value} value={item.value}>
-                {item.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        {(category === "jobs" || category === "promo" || category === "review") && (
+          <div>
+            <label className="mb-1 block text-xs text-gray-500">Industry</label>
+            <select
+              value={industry}
+              onChange={(e) => {
+                setIndustry(e.target.value);
+                setMessage(null);
+              }}
+              className="w-full border-b py-2 text-sm outline-none"
+            >
+              <option value="">業種を選択</option>
+              {getIndustries().map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div>
           <label className="mb-1 block text-xs text-gray-500">
@@ -631,55 +640,56 @@ export default function WritePageClient() {
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Write a title"
+            placeholder="タイトルを入力"
             className="w-full border-b py-2 text-lg outline-none"
           />
         </div>
 
-        <div>
-          <label className="mb-1 block text-xs text-gray-500">
-            画像を選択してください
-          </label>
+        {!isAnonymous && (
+          <>
+            <div>
+              <label className="mb-1 block text-xs text-gray-500">
+                画像を選択してください
+              </label>
 
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={(e) => {
-              handleThumbnailFileChange(e.target.files?.[0] ?? null);
-            }}
-            className="w-full border-b py-2 text-sm outline-none"
-          />
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(e) => {
+                  handleThumbnailFileChange(e.target.files?.[0] ?? null);
+                }}
+                className="w-full border-b py-2 text-sm outline-none"
+              />
 
-          <p className="mt-1 text-xs text-gray-400">
-            画像は自動で圧縮されて保存されます。
-          </p>
-          <p className="mt-1 text-xs text-gray-400">
-            JPG / PNG / WEBP、元画像は12MB以下
-          </p>
+              <p className="mt-1 text-xs text-gray-400">
+                画像は自動で圧縮されて保存されます。
+              </p>
+              <p className="mt-1 text-xs text-gray-400">
+                JPG / PNG / WEBP、元画像は12MB以下
+              </p>
 
-          {thumbnailPreviewUrl && (
-            <div className="mt-4">
-              <img
-                src={thumbnailPreviewUrl}
-                alt=""
-                className="w-full max-w-xs bg-[#e8e1d8] object-cover"
+              {thumbnailPreviewUrl && (
+                <div className="mt-4">
+                  <img
+                    src={thumbnailPreviewUrl}
+                    alt=""
+                    className="w-full max-w-xs bg-[#e8e1d8] object-cover"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs text-gray-500">Image URL</label>
+              <input
+                value={thumbnailUrl}
+                onChange={(e) => setThumbnailUrl(e.target.value)}
+                placeholder="https://..."
+                className="w-full border-b py-2 text-sm outline-none"
               />
             </div>
-          )}
-        </div>
-
-        <div>
-          <label className="mb-1 block text-xs text-gray-500">Image URL</label>
-          <input
-            value={thumbnailUrl}
-            onChange={(e) => setThumbnailUrl(e.target.value)}
-            placeholder="https://..."
-            className="w-full border-b py-2 text-sm outline-none"
-          />
-          <p className="mt-1 text-xs text-gray-400">
-            画像をアップロードした場合は、そちらが優先して使用されます。
-          </p>
-        </div>
+          </>
+        )}
 
         <div>
           <label className="mb-2 block text-xs text-gray-500">Body</label>
@@ -692,7 +702,7 @@ export default function WritePageClient() {
             disabled={loading}
             className="text-sm underline disabled:opacity-50"
           >
-            {loading ? "Posting..." : "Post"}
+            {loading ? "投稿中..." : "投稿する"}
           </button>
         </div>
       </form>
