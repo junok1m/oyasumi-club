@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import ProfileForm from "./ProfileForm";
 import ProfilePostsList from "./ProfilePostList";
@@ -40,6 +40,7 @@ type MessageState = {
 } | null;
 
 function ProfileContent() {
+  const router = useRouter();
   const [activeTab, setActiveTab] =
     useState<"posts" | "comments" | "saved">("posts");
 
@@ -52,6 +53,7 @@ function ProfileContent() {
   const [profile, setProfile] = useState<MyProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const [comments, setComments] = useState<any[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(true);
@@ -240,6 +242,22 @@ function ProfileContent() {
     };
   }, []);
 
+  async function handleLogout() {
+    try {
+      setLoggingOut(true);
+      await supabase.auth.signOut();
+      router.push("/");
+      router.refresh();
+    } catch (error) {
+      console.error("Logout failed:", error);
+      setMessage({
+        text: "ログアウトに失敗しました。",
+        type: "error",
+      });
+      setLoggingOut(false);
+    }
+  }
+
   async function handleSaveProfile() {
     try {
       setSaving(true);
@@ -348,20 +366,30 @@ function ProfileContent() {
   return (
     <main className="min-h-screen bg-[#f7f4ee] px-4 pb-24 pt-6 text-[#5f5a54]">
       <div className="mx-auto max-w-3xl space-y-8">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
           <Link
-            href="/board"
+            href="/"
             className="text-[12px] tracking-[0.08em] text-[#8e8a84]"
           >
-            &lt;&lt; BACK
+            << HOME
           </Link>
 
-          <Link
-            href="/board/write"
-            className="hidden border-b border-[#bfb6aa] pb-0.5 text-[12px] uppercase tracking-[0.12em] text-[#5f5a54] sm:inline-block"
-          >
-            Write Post
-          </Link>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <Link
+              href="/board/write"
+              className="rounded-full border border-[#cfc6bb] bg-white px-4 py-2 text-[13px] font-semibold text-[#5f5a54]"
+            >
+              Write Post
+            </Link>
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="rounded-full bg-[#4f3a4f] px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-50"
+            >
+              {loggingOut ? "..." : "Logout"}
+            </button>
+          </div>
         </div>
 
         {pendingMessage && (
@@ -372,11 +400,8 @@ function ProfileContent() {
             </p>
 
             <div className="mt-3 flex gap-4 text-[12px]">
-              <Link
-                href="/board"
-                className="border-b border-dotted border-[#cfc6bb]"
-              >
-                掲示板を見る
+              <Link href="/" className="border-b border-dotted border-[#cfc6bb]">
+                ホームを見る
               </Link>
 
               <Link
@@ -422,84 +447,77 @@ function ProfileContent() {
           </div>
         )}
 
-        <section>
-          <div className="mb-4 flex items-center justify-between">
-            {profile?.role === "admin" && (
-              <div className="mb-4 flex flex-wrap gap-2">
-                <Link
-                  href="/admin/posts"
-                  className="border border-[#ddd4c9] px-3 py-1 text-[12px]"
-                >
-                  Posts
-                </Link>
-
-                <Link
-                  href="/admin/comments"
-                  className="border border-[#ddd4c9] px-3 py-1 text-[12px]"
-                >
-                  Comments
-                </Link>
-
-                <Link
-                  href="/admin/users"
-                  className="border border-[#ddd4c9] px-3 py-1 text-[12px]"
-                >
-                  Users
-                </Link>
-
-                <Link
-                  href="/admin/guide"
-                  className="border border-[#ddd4c9] px-3 py-1 text-[12px]"
-                >
-                  Guide
-                </Link>
-              </div>
-            )}
-
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setActiveTab("posts")}
-                className={`rounded-full px-3 py-1 text-[12px] transition ${
-                  activeTab === "posts"
-                    ? "bg-[#e9e3dc] text-[#4f4a45]"
-                    : "text-[#9b948c]"
-                }`}
+        {profile?.role === "admin" && (
+          <section className="rounded-2xl border border-[#e0d7cc] bg-[#fffaf4] px-4 py-4">
+            <p className="mb-3 text-[13px] font-bold text-[#4f3a4f]">
+              🚪 アドミン区画
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/admin/posts"
+                className="rounded-full border border-[#ddd4c9] bg-white px-3 py-1.5 text-[12px] font-medium"
               >
-                My Posts
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveTab("comments")}
-                className={`rounded-full px-3 py-1 text-[12px] transition ${
-                  activeTab === "comments"
-                    ? "bg-[#e9e3dc] text-[#4f4a45]"
-                    : "text-[#9b948c]"
-                }`}
+                Posts
+              </Link>
+              <Link
+                href="/admin/comments"
+                className="rounded-full border border-[#ddd4c9] bg-white px-3 py-1.5 text-[12px] font-medium"
               >
                 Comments
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveTab("saved")}
-                className={`rounded-full px-3 py-1 text-[12px] transition ${
-                  activeTab === "saved"
-                    ? "bg-[#e9e3dc] text-[#4f4a45]"
-                    : "text-[#9b948c]"
-                }`}
+              </Link>
+              <Link
+                href="/admin/users"
+                className="rounded-full border border-[#ddd4c9] bg-white px-3 py-1.5 text-[12px] font-medium"
               >
-                Saved
-              </button>
+                Users
+              </Link>
+              <Link
+                href="/admin/guide"
+                className="rounded-full border border-[#ddd4c9] bg-white px-3 py-1.5 text-[12px] font-medium"
+              >
+                Guide
+              </Link>
             </div>
+          </section>
+        )}
 
-            <Link
-              href="/board/write"
-              className="border-b border-[#bfb6aa] pb-0.5 text-[12px] uppercase tracking-[0.12em] text-[#5f5a54] sm:hidden"
+        <section>
+          <div className="mb-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveTab("posts")}
+              className={`rounded-full px-3 py-1.5 text-[12px] transition ${
+                activeTab === "posts"
+                  ? "bg-[#e9e3dc] font-semibold text-[#4f4a45]"
+                  : "text-[#9b948c]"
+              }`}
             >
-              Write
-            </Link>
+              My Posts
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("comments")}
+              className={`rounded-full px-3 py-1.5 text-[12px] transition ${
+                activeTab === "comments"
+                  ? "bg-[#e9e3dc] font-semibold text-[#4f4a45]"
+                  : "text-[#9b948c]"
+              }`}
+            >
+              Comments
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("saved")}
+              className={`rounded-full px-3 py-1.5 text-[12px] transition ${
+                activeTab === "saved"
+                  ? "bg-[#e9e3dc] font-semibold text-[#4f4a45]"
+                  : "text-[#9b948c]"
+              }`}
+            >
+              Saved
+            </button>
           </div>
 
           {activeTab === "posts" ? (
