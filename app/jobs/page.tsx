@@ -248,7 +248,7 @@ export default async function JobsPage({
       <div className="mx-auto w-[92%] max-w-5xl py-8">
         <h1 className="mb-4 text-[24px] font-semibold text-[#4f3a4f]">女の子向け求人</h1>
         <p className="mb-6 text-[12px] leading-6 text-[#9b7892]">
-          シドニーで働きたい女の子向けの求人情報。風俗・カラオケ・マッサージ・クラブなど、募集中のお店をチェックできます。
+          オーストラリア・ニュージーランドで働きたいならここから求人をチェック♡
         </p>
 
         <div className="space-y-6">
