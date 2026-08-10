@@ -381,7 +381,7 @@ function ProfileContent() {
             href="/"
             className="text-[12px] tracking-[0.08em] text-[#8e8a84]"
           >
-            << HOME
+            {"<< HOME"}
           </Link>
 
           <div className="flex flex-wrap items-center justify-end gap-2">
