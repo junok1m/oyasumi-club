@@ -9,7 +9,7 @@ export default function SignupPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("client");
+  const [role, setRole] = useState("girl");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
@@ -77,7 +77,6 @@ export default function SignupPage() {
             onChange={(e) => setRole(e.target.value)}
             className="w-full border-b py-2 outline-none"
           >
-            <option value="client">Client</option>
             <option value="girl">Girl</option>
             <option value="shop">Shop</option>
           </select>
