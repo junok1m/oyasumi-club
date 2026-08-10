@@ -1,13 +1,23 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import LineLoginButton from "@/components/LineLoginButton";
 
-export default function LoginPage() {
+function safeNextPath(next: string | null): string {
+  if (!next || !next.startsWith("/") || next.startsWith("//")) {
+    return "/profile";
+  }
+  return next;
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = safeNextPath(searchParams.get("next"));
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -27,7 +37,7 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/profile");
+      router.push(next);
       router.refresh();
     } catch (error) {
       console.error(error);
@@ -139,5 +149,13 @@ export default function LoginPage() {
         </section>
       </section>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<main className="min-h-dvh bg-[#fff4f8]" />}>
+      <LoginForm />
+    </Suspense>
   );
 }
