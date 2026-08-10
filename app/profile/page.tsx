@@ -39,6 +39,21 @@ type MessageState = {
   type: "success" | "error";
 } | null;
 
+type AdminBadges = {
+  pendingPosts: number;
+  newUsers: number;
+  pendingGuides: number;
+};
+
+function Badge({ count }: { count: number }) {
+  if (!count || count <= 0) return null;
+  return (
+    <span className="ml-1 rounded-full bg-[#4f3a4f] px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+      {count > 999 ? "999+" : count}
+    </span>
+  );
+}
+
 function ProfileContent() {
   const router = useRouter();
   const [activeTab, setActiveTab] =
@@ -58,6 +73,12 @@ function ProfileContent() {
 
   const [comments, setComments] = useState<any[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(true);
+
+  const [adminBadges, setAdminBadges] = useState<AdminBadges>({
+    pendingPosts: 0,
+    newUsers: 0,
+    pendingGuides: 0,
+  });
 
   const [role, setRole] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -242,6 +263,48 @@ function ProfileContent() {
       cancelled = true;
     };
   }, [router]);
+
+  // Admin dashboard badges
+  useEffect(() => {
+    if (profile?.role !== "admin") return;
+
+    let cancelled = false;
+
+    async function loadAdminBadges() {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const since = sevenDaysAgo.toISOString();
+
+      const [pendingPostsRes, newUsersRes, pendingGuidesRes] = await Promise.all([
+        supabase
+          .from("board_posts")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "pending"),
+        supabase
+          .from("profiles")
+          .select("*", { count: "exact", head: true })
+          .gte("created_at", since),
+        supabase
+          .from("guide_posts")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "pending"),
+      ]);
+
+      if (cancelled) return;
+
+      setAdminBadges({
+        pendingPosts: pendingPostsRes.count ?? 0,
+        newUsers: newUsersRes.count ?? 0,
+        pendingGuides: pendingGuidesRes.count ?? 0,
+      });
+    }
+
+    loadAdminBadges();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [profile?.role]);
 
   async function handleLogout() {
     try {
@@ -465,29 +528,35 @@ function ProfileContent() {
             <div className="flex flex-wrap gap-2">
               <Link
                 href="/admin/posts"
-                className="rounded-full border border-[#ddd4c9] bg-white px-3 py-1.5 text-[12px] font-medium"
+                className="inline-flex items-center rounded-full border border-[#ddd4c9] bg-white px-3 py-1.5 text-[12px] font-medium"
               >
                 Posts
+                <Badge count={adminBadges.pendingPosts} />
               </Link>
               <Link
                 href="/admin/comments"
-                className="rounded-full border border-[#ddd4c9] bg-white px-3 py-1.5 text-[12px] font-medium"
+                className="inline-flex items-center rounded-full border border-[#ddd4c9] bg-white px-3 py-1.5 text-[12px] font-medium"
               >
                 Comments
               </Link>
               <Link
                 href="/admin/users"
-                className="rounded-full border border-[#ddd4c9] bg-white px-3 py-1.5 text-[12px] font-medium"
+                className="inline-flex items-center rounded-full border border-[#ddd4c9] bg-white px-3 py-1.5 text-[12px] font-medium"
               >
                 Users
+                <Badge count={adminBadges.newUsers} />
               </Link>
               <Link
                 href="/admin/guide"
-                className="rounded-full border border-[#ddd4c9] bg-white px-3 py-1.5 text-[12px] font-medium"
+                className="inline-flex items-center rounded-full border border-[#ddd4c9] bg-white px-3 py-1.5 text-[12px] font-medium"
               >
                 Guide
+                <Badge count={adminBadges.pendingGuides} />
               </Link>
             </div>
+            <p className="mt-2 text-[11px] text-[#9b948c]">
+              バッジ: Posts=審査待ち / Users=直近7日の新規 / Guide=審査待ち
+            </p>
           </section>
         )}
 
