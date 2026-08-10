@@ -5,6 +5,7 @@ import SearchBar from "@/app/board/SearchBar";
 import LocationPills from "@/components/location/LocationPills";
 import BottomNavGirls from "@/app/girls/_components/BottomNavGirls";
 import { industryLabel, industryStyle } from "@/lib/industry-style";
+import JobsWriteButton from "@/components/JobsWriteButton";
 
 type BoardPost = {
   id: number;
@@ -246,10 +247,17 @@ export default async function JobsPage({
   return (
     <main className="-mb-24 min-h-dvh bg-[#fff3f8] pb-32 text-[#5f4d5c]">
       <div className="mx-auto w-[92%] max-w-5xl py-8">
-        <h1 className="mb-4 text-[24px] font-semibold text-[#4f3a4f]">女の子向け求人</h1>
-        <p className="mb-6 text-[12px] leading-6 text-[#9b7892]">
-          オーストラリア・ニュージーランドで働きたいならここから求人をチェック♡
-        </p>
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-[24px] font-semibold text-[#4f3a4f]">
+              女の子向け求人
+            </h1>
+            <p className="mt-2 text-[12px] leading-6 text-[#9b7892]">
+              オーストラリア・ニュージーランドで働きたいならここから求人をチェック♡
+            </p>
+          </div>
+          <JobsWriteButton />
+        </div>
 
         <div className="space-y-6">
           <SearchBar q={q} category="jobs" sort={sort} basePath="/jobs" />
@@ -268,7 +276,10 @@ export default async function JobsPage({
 
         {data.results.length === 0 ? (
           <div className="rounded-3xl border border-pink-100 bg-white/70 px-6 py-20 text-center text-sm text-[#9b7892]">
-            まだ求人投稿がありません。
+            <p>まだ求人投稿がありません。</p>
+            <div className="mt-4 flex justify-center">
+              <JobsWriteButton label="最初の求人を出す" />
+            </div>
           </div>
         ) : (
           <div className="divide-y divide-pink-100">
@@ -334,6 +345,14 @@ export default async function JobsPage({
           </div>
         )}
       </div>
+
+      <div className="fixed bottom-20 left-0 right-0 z-40 flex justify-center px-4 md:hidden">
+        <JobsWriteButton
+          label="求人を出す"
+          className="rounded-full bg-[#4f3a4f] px-6 py-3 text-sm font-bold text-white shadow-lg disabled:opacity-60"
+        />
+      </div>
+
       <BottomNavGirls />
     </main>
   );
