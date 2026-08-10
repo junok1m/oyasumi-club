@@ -52,6 +52,7 @@ function ProfileContent() {
 
   const [profile, setProfile] = useState<MyProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [authReady, setAuthReady] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -105,11 +106,11 @@ function ProfileContent() {
         if (cancelled) return;
 
         if (userError || !user) {
-          setProfile(null);
-          setPosts([]);
-          setSavedPosts([]);
+          router.replace("/login?next=/profile");
           return;
         }
+
+        setAuthReady(true);
 
         const [
           profileResult,
@@ -240,13 +241,13 @@ function ProfileContent() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [router]);
 
   async function handleLogout() {
     try {
       setLoggingOut(true);
       await supabase.auth.signOut();
-      router.push("/");
+      router.push("/login");
       router.refresh();
     } catch (error) {
       console.error("Logout failed:", error);
@@ -271,6 +272,7 @@ function ProfileContent() {
           text: "ログインが必要です。",
           type: "error",
         });
+        router.replace("/login?next=/profile");
         return;
       }
 
@@ -361,6 +363,14 @@ function ProfileContent() {
         type: "error",
       });
     }
+  }
+
+  if (!authReady) {
+    return (
+      <main className="min-h-screen bg-[#f7f4ee] px-4 pt-10 text-[#5f5a54]">
+        <p className="text-center text-sm text-[#8e8a84]">Loading...</p>
+      </main>
+    );
   }
 
   return (
