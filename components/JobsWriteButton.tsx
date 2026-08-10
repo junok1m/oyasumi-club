@@ -5,6 +5,8 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { getMyProfile } from "@/lib/auth";
 
+const WRITE_JOBS_PATH = "/board/write?category=jobs";
+
 export default function JobsWriteButton({
   className = "",
   label = "求人を出す",
@@ -25,7 +27,9 @@ export default function JobsWriteButton({
       } = await supabase.auth.getUser();
 
       if (!user) {
-        router.push("/login?next=/board/write?category=jobs");
+        router.push(
+          `/login?next=${encodeURIComponent(WRITE_JOBS_PATH)}`
+        );
         return;
       }
 
@@ -33,15 +37,14 @@ export default function JobsWriteButton({
       const role = profile?.role;
 
       if (role === "shop" || role === "admin") {
-        router.push("/board/write?category=jobs");
+        router.push(WRITE_JOBS_PATH);
         return;
       }
 
-      // Logged in but not shop
       alert("求人の投稿は店舗アカウント（Shop）のみ可能です。");
     } catch (error) {
       console.error(error);
-      router.push("/login?next=/board/write?category=jobs");
+      router.push(`/login?next=${encodeURIComponent(WRITE_JOBS_PATH)}`);
     } finally {
       setLoading(false);
     }
