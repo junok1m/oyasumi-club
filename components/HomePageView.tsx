@@ -401,16 +401,16 @@ export default async function HomePageView({
                 <Link
                   key={post.id}
                   href={`/blog/${prettySlug(post)}`}
-                  className="w-[200px] shrink-0 overflow-hidden rounded-2xl border border-pink-100 bg-white/80"
+                  className="w-[200px] shrink-0 border border-pink-100 bg-white/80"
                 >
-                  <div className="aspect-[16/10] w-full bg-pink-50">
+                  <div className="aspect-[3/2] w-full bg-pink-50">
                     {(post.thumbnail_small_url || post.thumbnail_url) && (
                       <img
                         src={
                           post.thumbnail_small_url || post.thumbnail_url || ""
                         }
                         alt=""
-                        className="h-full w-full object-cover"
+                        className="h-full w-full object-contain"
                       />
                     )}
                   </div>
