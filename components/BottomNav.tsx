@@ -21,6 +21,7 @@ function BottomNavInner() {
 
   const jobsHref = cityFromPath ? `/${cityFromPath}/jobs` : "/jobs";
   const qnaHref = cityFromPath ? `/${cityFromPath}/qna` : "/qna";
+  const blogHref = cityFromPath ? `/${cityFromPath}/blog` : "/blog";
 
   const items = [
     { icon: "💜", text: "ホーム", href: "/", path: "/" },
@@ -36,7 +37,12 @@ function BottomNavInner() {
       href: qnaHref,
       path: cityFromPath ? `/${cityFromPath}/qna` : "/qna",
     },
-    { icon: "📝", text: "記事", href: "/blog", path: "/blog" },
+    {
+      icon: "📝",
+      text: "記事",
+      href: blogHref,
+      path: cityFromPath ? `/${cityFromPath}/blog` : "/blog",
+    },
     { icon: "👤", text: "マイページ", href: "/profile", path: "/profile" },
   ];
 
