@@ -67,6 +67,31 @@ export default async function HomePageView({
     .eq("status", "approved")
     .eq("category", "review");
 
+  // Blog: city page shows that city + nationwide (city is null)
+  let tipsBase = supabase
+    .from("board_posts")
+    .select(
+      "id, title, excerpt, slug, created_at, thumbnail_url, thumbnail_small_url"
+    )
+    .eq("status", "approved")
+    .eq("category", "blog")
+    .order("created_at", { ascending: false })
+    .limit(6);
+
+  if (city) {
+    tipsBase = tipsBase.or(`city.eq.${city},city.is.null`);
+  }
+
+  let blogCountBase = supabase
+    .from("board_posts")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "approved")
+    .eq("category", "blog");
+
+  if (city) {
+    blogCountBase = blogCountBase.or(`city.eq.${city},city.is.null`);
+  }
+
   const cityCountPromises = CITIES.map((c) =>
     supabase
       .from("board_posts")
@@ -89,25 +114,13 @@ export default async function HomePageView({
     ...cityCounts
   ] = await Promise.all([
     city ? qnaBase.eq("city", city) : qnaBase,
-    supabase
-      .from("board_posts")
-      .select(
-        "id, title, excerpt, slug, created_at, thumbnail_url, thumbnail_small_url"
-      )
-      .eq("status", "approved")
-      .eq("category", "blog")
-      .order("created_at", { ascending: false })
-      .limit(6),
+    tipsBase,
     city ? jobsBase.eq("city", city) : jobsBase,
     city ? reviewsBase.eq("city", city) : reviewsBase,
     city ? qnaCountBase.eq("city", city) : qnaCountBase,
     city ? jobsCountBase.eq("city", city) : jobsCountBase,
     city ? reviewsCountBase.eq("city", city) : reviewsCountBase,
-    supabase
-      .from("board_posts")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "approved")
-      .eq("category", "blog"),
+    blogCountBase,
     ...cityCountPromises,
   ]);
 
