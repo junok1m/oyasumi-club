@@ -213,7 +213,7 @@ export async function generateMetadata({
     ? `「${q}」の記事検索結果 | おやすみクラブ`
     : "女の子向け記事 | おやすみクラブ";
   const description =
-    "ビザ・安全・稼ぎ方・はじめかたなど、シドニーで働く女の子向けの記事をまとめています。";
+    "ビザ・安全・稼ぎ方・生活など、オーストラリア・ニュージーランドで働く女性向けの記事をまとめています。";
 
   return {
     title: page > 1 ? `${title} - ページ${page}` : title,
