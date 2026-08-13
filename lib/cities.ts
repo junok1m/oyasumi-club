@@ -18,6 +18,12 @@ export const CITIES = [
     country: "AU",
   },
   {
+    value: "others",
+    label: "Others",
+    labelJa: "その他",
+    country: "AU",
+  },
+  {
     value: "auckland",
     label: "Auckland",
     labelJa: "オークランド",
