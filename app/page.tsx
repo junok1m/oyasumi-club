@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import HomePageView from "@/components/HomePageView";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "おやすみクラブ | オーストラリアで働く女の子の居場所",
