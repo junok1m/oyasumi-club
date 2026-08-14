@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { supabaseServer } from "@/lib/supabase-server";
+import { supabasePublic } from "@/lib/supabase-public";
 import { industryLabel, industryStyle } from "@/lib/industry-style";
 
 type MoreGuide = {
@@ -22,7 +22,7 @@ async function getMoreGuides({
   industry,
   location,
 }: Props) {
-  const supabase = await supabaseServer();
+  const supabase = supabasePublic();
 
   const sameIndustryQuery = industry
     ? supabase
