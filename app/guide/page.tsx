@@ -1,9 +1,11 @@
 import Link from "next/link";
-import { supabaseServer } from "@/lib/supabase-server";
+import { supabasePublic } from "@/lib/supabase-public";
 import type { Metadata } from "next";
 import SearchBar from "@/app/board/SearchBar";
 import LocationPills from "@/components/location/LocationPills";
 import { industryLabel, industryStyle } from "@/lib/industry-style";
+
+export const revalidate = 60;
 
 type GuidePost = {
   id: number;
@@ -169,7 +171,7 @@ async function getGuidePosts(
   const from = (safePage - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  const supabase = await supabaseServer();
+  const supabase = supabasePublic();
 
   let query = supabase
     .from("guide_posts")
