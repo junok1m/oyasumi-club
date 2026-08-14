@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
-import { supabaseServer } from "@/lib/supabase-server";
+import { supabasePublic } from "@/lib/supabase-public";
 import PostActions from "./PostActions";
 import type { Metadata } from "next";
 import MoreGuides from "@/components/guide/MoreGuides";
+
+export const revalidate = 60;
 
 type GuidePost = {
   id: number;
@@ -32,7 +34,7 @@ export async function generateMetadata({
     };
   }
 
-  const supabase = await supabaseServer();
+  const supabase = supabasePublic();
 
   const { data: post } = await supabase
     .from("guide_posts")
@@ -95,7 +97,7 @@ export default async function GuideDetailPage({
 
   if (!id) notFound();
 
-  const supabase = await supabaseServer();
+  const supabase = supabasePublic();
 
   const { data: post, error } = await supabase
     .from("guide_posts")
