@@ -1,10 +1,12 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { supabaseServer } from "@/lib/supabase-server";
+import { supabasePublic } from "@/lib/supabase-public";
 import SearchBar from "@/app/board/SearchBar";
 import LocationPills from "@/components/location/LocationPills";
 import BottomNavGirls from "@/app/girls/_components/BottomNavGirls";
 import { industryLabel, industryStyle } from "@/lib/industry-style";
+
+export const revalidate = 60;
 
 type BoardPost = {
   id: number;
@@ -156,7 +158,7 @@ async function getPosts(
   const safePage = Number.isNaN(page) || page < 1 ? 1 : page;
   const from = (safePage - 1) * pageSize;
   const to = from + pageSize - 1;
-  const supabase = await supabaseServer();
+  const supabase = supabasePublic();
 
   let query = supabase
     .from("board_posts")
