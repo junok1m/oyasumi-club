@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import HomePageView from "@/components/HomePageView";
 import { CITIES, cityLabelJa, isValidCity } from "@/lib/cities";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
+
+
 
 export async function generateStaticParams() {
   return CITIES.map((c) => ({ city: c.value }));
