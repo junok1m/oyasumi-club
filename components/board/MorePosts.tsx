@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { supabaseServer } from "@/lib/supabase-server";
+import { supabasePublic } from "@/lib/supabase-public";
 import { categoryLabel, categoryColor } from "@/lib/category-style";
 import { industryLabel, industryStyle } from "@/lib/industry-style";
 
@@ -46,7 +46,7 @@ async function getMorePosts({
   category,
   industry,
 }: Props) {
-  const supabase = await supabaseServer();
+  const supabase = supabasePublic();
 
   const baseSelect = "id, title, slug, category, industry, location, created_at";
 
