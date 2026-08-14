@@ -1,14 +1,14 @@
 // components/location/LocationPills.tsx
 
 import Link from "next/link";
-import { supabaseServer } from "@/lib/supabase-server";
+import { supabasePublic } from "@/lib/supabase-public";
 import { HomeSection } from "@/components/home/HomeSection";
 
 async function getLocations(
   category?: string,
   source: "board" | "guide" | "all" = "board"
 ) {
-  const supabase = await supabaseServer();
+  const supabase = supabasePublic();
   const counts = new Map<string, number>();
 
   if (source === "board" || source === "all") {
