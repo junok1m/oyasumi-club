@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { supabasePublic } from "@/lib/supabase-public";
 import { industryLabel, industryStyle } from "@/lib/industry-style";
 import SearchBar from "@/components/SearchBar";
 import { CITIES, cityLabelJa, type CitySlug } from "@/lib/cities";
@@ -24,6 +24,8 @@ export default async function HomePageView({
   city?: CitySlug;
 }) {
   const cityName = city ? cityLabelJa(city) : null;
+
+  const supabase = supabasePublic();
 
   const qnaBase = supabase
     .from("board_posts")
