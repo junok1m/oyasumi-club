@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import Link from "next/link";
 import PostActions from "./PostActions";
 import { supabaseServer } from "@/lib/supabase-server";
@@ -56,7 +57,7 @@ function stripHtml(html: string) {
     .trim();
 }
 
-async function getPost(prettySlug?: string): Promise<BoardDetail | null> {
+const getPost = cache(async (prettySlug?: string): Promise<BoardDetail | null> => {
   if (!prettySlug) return null;
 
   const postId = prettySlug.split("-")[0];
@@ -90,7 +91,7 @@ async function getPost(prettySlug?: string): Promise<BoardDetail | null> {
       )
       .eq("id", Number(postId))
       .eq("status", "approved")
-      .single();
+      .maybeSingle();
 
     if (error || !data) {
       console.error("getPost failed:", error);
@@ -136,8 +137,7 @@ async function getPost(prettySlug?: string): Promise<BoardDetail | null> {
     console.error("getPost failed:", error);
     return null;
   }
-}
-
+});
 
 async function incrementViews(postId: number): Promise<boolean> {
   try {

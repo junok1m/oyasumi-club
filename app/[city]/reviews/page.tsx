@@ -1,9 +1,11 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { supabaseServer } from "@/lib/supabase-server";
+import { supabasePublic } from "@/lib/supabase-public";
 import { industryLabel, industryStyle } from "@/lib/industry-style";
 import { CITIES, cityLabelJa, isValidCity } from "@/lib/cities";
+
+export const revalidate = 60;
 
 type BoardPost = {
   id: number;
@@ -60,7 +62,7 @@ export default async function CityReviewsPage({
   if (!isValidCity(city)) notFound();
 
   const name = cityLabelJa(city);
-  const supabase = await supabaseServer();
+  const supabase = supabasePublic();
 
   const { data } = await supabase
     .from("board_posts")

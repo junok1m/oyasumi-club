@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { supabaseServer } from "@/lib/supabase-server";
+import { supabasePublic } from "@/lib/supabase-public";
 import { industryLabel, industryStyle } from "@/lib/industry-style";
 import { CITIES, cityLabelJa, isValidCity } from "@/lib/cities";
 
@@ -87,7 +87,7 @@ export default async function CityJobsPage({
   const to = from + pageSize - 1;
 
   const name = cityLabelJa(city);
-  const supabase = await supabaseServer();
+  const supabase = supabasePublic();
 
   let query = supabase
     .from("board_posts")

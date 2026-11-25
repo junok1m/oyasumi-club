@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import PostActions from "@/app/board/[slug]/PostActions";
@@ -40,7 +41,7 @@ function stripHtml(html: string) {
     .trim();
 }
 
-async function getPost(prettySlug?: string): Promise<BoardDetail | null> {
+const getPost = cache(async (prettySlug?: string): Promise<BoardDetail | null> => {
   if (!prettySlug) return null;
   const postId = prettySlug.split("-")[0];
   if (!postId || Number.isNaN(Number(postId))) return null;
@@ -55,7 +56,7 @@ async function getPost(prettySlug?: string): Promise<BoardDetail | null> {
     .eq("id", Number(postId))
     .eq("status", "approved")
     .eq("category", "qa")
-    .single();
+    .maybeSingle();
 
   if (error || !data) return null;
 
@@ -74,7 +75,7 @@ async function getPost(prettySlug?: string): Promise<BoardDetail | null> {
     created_at: data.created_at,
     thumbnail_url: data.thumbnail_url,
   };
-}
+});
 
 async function incrementViews(postId: number) {
   const supabase = await supabaseServer();

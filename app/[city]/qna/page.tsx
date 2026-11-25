@@ -1,15 +1,17 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { supabaseServer } from "@/lib/supabase-server";
+import { supabasePublic } from "@/lib/supabase-public";
 import { CITIES, cityLabelJa, isValidCity } from "@/lib/cities";
+
+export const revalidate = 60;
 
 type BoardPost = {
   id: number;
   title: string;
   created_at: string;
   slug: string | null;
-  comments?: { id: number }[];
+  comments?: { count: number }[];
 };
 
 function prettySlug(post: { id: number; slug: string | null }) {
@@ -58,11 +60,11 @@ export default async function CityQnaPage({
   if (!isValidCity(city)) notFound();
 
   const name = cityLabelJa(city);
-  const supabase = await supabaseServer();
+  const supabase = supabasePublic();
 
   const { data } = await supabase
     .from("board_posts")
-    .select(`id, title, created_at, slug, comments (id)`)
+    .select(`id, title, created_at, slug, comments (count)`)
     .eq("status", "approved")
     .eq("category", "qa")
     .eq("city", city)
@@ -112,7 +114,7 @@ export default async function CityQnaPage({
         ) : (
           <div className="divide-y divide-pink-100">
             {results.map((post) => {
-              const replies = post.comments?.length ?? 0;
+              const replies = post.comments?.[0]?.count ?? 0;
               return (
                 <Link
                   key={post.id}
